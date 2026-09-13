@@ -1,0 +1,1631 @@
+{
+  "01-inherited-team-access:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing the direct access path."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, which independently grants admin access to payments-core and must be closed separately from the direct grant."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, the only access path found for this repo."
+      },
+      {
+        "id": "gh-remove-org-member",
+        "operation": "github.removeOrgMember",
+        "params": {
+          "login": "dana-departing"
+        },
+        "rationale": "Removes Dana's org membership entirely as a final safeguard against any unlisted org-based grants; flagged as irreversible and requires human approval before execution."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers ownership of the Q4 Payments Runbook to successor Sam before removing Dana's access, preventing the file from being orphaned since Dana is the sole owner."
+      },
+      {
+        "id": "drive-remove-doc1-permission",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "owner"
+        },
+        "rationale": "Removes Dana's remaining permission entry on doc-1 after ownership transfer to ensure no residual access remains."
+      },
+      {
+        "id": "drive-remove-doc2-permission",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap doc, which is owned by Sam and needs no ownership transfer."
+      },
+      {
+        "id": "drive-remove-doc3-writer-permission",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing her personal access path to the file."
+      },
+      {
+        "id": "drive-remove-doc3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' permission on Public Launch Notes since Dana still holds access through this public link, though a human should decide whether to restore public sharing afterwards."
+      },
+      {
+        "id": "linear-reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to successor Sam so work continues without Dana's involvement."
+      },
+      {
+        "id": "linear-reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the todo ledger client upgrade issue to successor Sam to ensure continuity of ownership."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her issues have been reassigned, closing her team-based access in Linear."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Automated offboarding actions were taken across GitHub, Drive, and Linear for dana@acme.test; review revoked grants, transferred file ownership, and reassigned issues for completeness."
+        },
+        "rationale": "Creates a permanent audit record in Linear documenting the offboarding actions taken for traceability."
+      },
+      {
+        "id": "slack-post-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing (dana@acme.test): GitHub direct and team-based access removed from payments-core and docs-site, org membership removal submitted for approval, Drive ownership of the Q4 Payments Runbook transferred to Sam, Dana's Drive permissions removed (including public link sharing on Public Launch Notes pending human review), Linear issues CORE-101 and CORE-102 reassigned to Sam, and team membership removed."
+        },
+        "rationale": "Posts a summary report to the configured Slack channel so stakeholders have visibility into the offboarding actions taken."
+      }
+    ],
+    "summary": "This plan removes Dana's direct, team-based, and org-level access across GitHub, transfers her sole-owned Drive file to Sam before stripping her remaining Drive permissions (including a public link-sharing grant flagged for human review), reassigns her open Linear issues to Sam and removes her team membership, and closes with an audit issue and Slack report; it deliberately leaves the org membership removal and public link-sharing restoration decision to human approval given their irreversibility.",
+    "tokens": {
+      "input": 2381,
+      "output": 3153
+    }
+  },
+  "02-org-base-permission:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write-level collaborator record on payments-core, closing one of three access paths to this repo."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, closing the admin-level access to payments-core granted via team membership."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write-level collaborator record on docs-site, closing that direct access path."
+      },
+      {
+        "id": "gh-remove-org-member",
+        "operation": "github.removeOrgMember",
+        "params": {
+          "login": "dana-departing"
+        },
+        "rationale": "Removes Dana from the acme-co organization entirely, which is the only way to close the org-base write access she otherwise retains on payments-core, web-app, and docs-site as an active member, and is appropriate given she is fully departing the company; this irreversible step will be held for human approval."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers ownership of the Q4 Payments Runbook to the successor before revoking Dana's access, since she is the sole owner and the file would otherwise be orphaned."
+      },
+      {
+        "id": "drive-remove-doc1-owner-perm",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "owner"
+        },
+        "rationale": "Removes Dana's residual owner permission record on doc-1 now that ownership has been transferred to Sam."
+      },
+      {
+        "id": "drive-remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer access to the Team Roadmap, which is owned by Sam and does not need a transfer."
+      },
+      {
+        "id": "drive-remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing her personal access path to this file."
+      },
+      {
+        "id": "drive-remove-doc3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' permission on Public Launch Notes since it is an access path Dana still holds and is not exempt for being impersonal; a human should decide afterwards whether to restore public sharing for legitimate business reasons."
+      },
+      {
+        "id": "linear-reassign-core101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress issue 'Fix settlement retry' from Dana to her successor Sam so work continues without interruption."
+      },
+      {
+        "id": "linear-reassign-core102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the todo issue 'Upgrade ledger client' from Dana to her successor Sam so it remains owned by an active team member."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the t-core team now that her open issues have been reassigned, closing her standing access to team resources."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Records that Dana Departing's GitHub, Drive, and Linear access was revoked or transferred as part of offboarding, with open issues reassigned to Sam Successor and repo/org access removed."
+        },
+        "rationale": "Creates a permanent audit record in Linear documenting the offboarding actions taken for traceability."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: GitHub org membership and repo access removed, Drive files transferred/permissions revoked (including public link-sharing on Public Launch Notes, pending human review), Linear issues reassigned to Sam Successor and team membership removed. Audit issue filed in Linear."
+        },
+        "rationale": "Notifies the team via Slack that Dana's offboarding actions have been executed and flags the public link-sharing removal for human review."
+      }
+    ],
+    "summary": "This plan revokes all direct, team-based, and org-base GitHub access, transfers Dana's sole-owned Drive file to her successor before revoking her remaining Drive permissions (including the public link-sharing grant, flagged for human review), reassigns her open Linear issues and removes her team membership, and closes with an audit issue and Slack report; it deliberately removes her from the GitHub org entirely since org-base access could not otherwise be closed and she is fully departing, leaving no other systems or grants untouched.",
+    "tokens": {
+      "input": 2431,
+      "output": 3493
+    }
+  },
+  "03-drive-link-sharing:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write grant on payments-core, which is one of two independent access paths into this repo."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, closing the team-derived admin access to payments-core that a direct-collaborator removal alone would not touch."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's only access path (direct write) to docs-site."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Dana is the sole owner of the Q4 Payments Runbook, so ownership must move to the successor before Dana's access can be revoked to avoid orphaning the file."
+      },
+      {
+        "id": "drive-remove-doc1-permission",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "owner"
+        },
+        "rationale": "Removes Dana's residual owner permission record on doc-1 now that ownership has been transferred to the successor."
+      },
+      {
+        "id": "drive-remove-doc2-permission",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer access to the Team Roadmap, which is owned by the successor and does not need transfer."
+      },
+      {
+        "id": "drive-remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's personal writer grant on Public Launch Notes, one of two distinct access paths to this file."
+      },
+      {
+        "id": "drive-remove-doc3-link",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant that also gives Dana continued access to this file; a human should decide afterward whether to restore public link-sharing for legitimate business needs."
+      },
+      {
+        "id": "linear-reassign-i1",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to the successor so ongoing work is not orphaned."
+      },
+      {
+        "id": "linear-reassign-i2",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade issue to the successor to keep it actionable after Dana departs."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her assigned issues have been reassigned."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Automated offboarding removed GitHub repo and team access, transferred sole Drive file ownership, removed residual Drive permissions including a public link grant on doc-3, reassigned Linear issues CORE-101 and CORE-102 to sam@acme.test, and removed team-core membership; org-level GitHub membership was left intact as no unresolved org-base grants remained."
+        },
+        "rationale": "Creates a permanent audit record of every access change made during this offboarding for future review."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: GitHub direct/team access removed on payments-core and docs-site (org membership retained, no residual grants), Drive doc-1 ownership transferred to sam@acme.test with old permission cleared, writer access removed from doc-2 and doc-3, public link-sharing removed from doc-3 pending human review, Linear issues CORE-101/CORE-102 reassigned to sam@acme.test, and core team membership removed."
+        },
+        "rationale": "Posts a summary of all offboarding actions to the configured Slack channel for team visibility."
+      }
+    ],
+    "summary": "This plan removes Dana's direct and team-derived GitHub access on payments-core and docs-site, transfers her sole-owned Drive file to the successor before stripping her remaining Drive permissions (including the public link on doc-3, flagged for human review), reassigns her open Linear issues to the successor, removes her core team membership, and closes with an audit issue and Slack report; it deliberately leaves her org-level GitHub membership intact since no residual org-base grants required the irreversible last resort of full org removal.",
+    "tokens": {
+      "input": 2381,
+      "output": 2986
+    }
+  },
+  "04-commit-timeout-rollback:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing the direct access path to this repo."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, closing the team-derived admin access to payments-core that a direct collaborator removal alone would not revoke."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, the only access path found for this repo."
+      },
+      {
+        "id": "drive-remove-p1",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Q4 Payments Runbook, which is already owned by successor Sam so no ownership transfer is required."
+      },
+      {
+        "id": "drive-remove-p3",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap doc, which is already owned by successor Sam so no ownership transfer is required."
+      },
+      {
+        "id": "drive-remove-p5",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing one of two access paths to this file."
+      },
+      {
+        "id": "drive-remove-p6-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant that still gives Dana (and anyone else) access to Public Launch Notes; a human should decide whether to re-enable public sharing afterward since this was previously a deliberately public file."
+      },
+      {
+        "id": "linear-reassign-i1",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry fix from Dana to successor Sam so the work continues to have an active owner."
+      },
+      {
+        "id": "linear-reassign-i2",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the todo ledger client upgrade from Dana to successor Sam so it remains tracked and actionable."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her assigned issues have been reassigned, closing her team-level access in Linear."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Automated offboarding executed for dana@acme.test / dana-departing: removed GitHub repo and team access on payments-core and docs-site, removed Drive permissions on 3 files including a link-sharing grant on Public Launch Notes (flagged for human review), reassigned 2 open Linear issues to sam@acme.test, and removed core team membership. Org membership on GitHub was left intact as no org-base access path was found requiring it."
+        },
+        "rationale": "Creates a permanent audit trail in Linear documenting exactly what access was closed and what was deliberately left for human review."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing (dana@acme.test): revoked GitHub direct+team access on payments-core, direct access on docs-site; removed Drive permissions on 3 files (including an 'anyone with the link' grant on Public Launch Notes flagged for human review); reassigned 2 open Linear issues to Sam; removed Linear core team membership. GitHub org membership left in place — no org-base grant was found necessitating removal."
+        },
+        "rationale": "Notifies the team via Slack of the offboarding actions taken and the one item flagged for human review, per standard offboarding reporting."
+      }
+    ],
+    "summary": "This plan closes all direct and team-derived GitHub access, removes Dana's Drive permissions on three files (flagging the public link-sharing grant for human review since ownership already sits with Sam), reassigns her open Linear issues to Sam, removes her Linear team membership, and finishes with an audit issue and Slack report; it deliberately leaves GitHub org membership intact since no org-base access path required removing it, avoiding the irreversible last-resort action.",
+    "tokens": {
+      "input": 2385,
+      "output": 2775
+    }
+  },
+  "05-rate-limited:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing the explicit per-user grant."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, which is the source of her admin-level access to payments-core via team membership."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, the only access path found for that repo."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers sole ownership of the Q4 Payments Runbook to the successor before any access removal so the file is not orphaned."
+      },
+      {
+        "id": "drive-remove-doc1-old-owner",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "owner"
+        },
+        "rationale": "Removes Dana's residual permission on the Q4 Payments Runbook left over after ownership transfer to the successor."
+      },
+      {
+        "id": "drive-remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap, which she does not own and no longer needs to edit."
+      },
+      {
+        "id": "drive-remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes as a distinct access path from the file's link sharing."
+      },
+      {
+        "id": "drive-remove-doc3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant on Public Launch Notes since Dana still holds access through it; a human should decide whether to restore public sharing afterwards."
+      },
+      {
+        "id": "linear-reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry fix to the successor so work continues without Dana's involvement."
+      },
+      {
+        "id": "linear-reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade task to the successor so it is not left unowned after Dana departs."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her open issues have been reassigned."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Records that Dana Departing's GitHub, Drive, and Linear access was reviewed and revoked/transferred as part of standard offboarding, including a link-sharing permission on doc-3 that was removed and may need human review for restoration."
+        },
+        "rationale": "Creates a durable audit trail in Linear documenting the offboarding actions taken for Dana."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: GitHub direct and team-based access removed from payments-core and docs-site; Drive file doc-1 ownership transferred to Sam and residual permissions removed; Drive writer access removed from doc-2 and doc-3; link-sharing on doc-3 removed (human review needed on whether to restore); Linear issues CORE-101 and CORE-102 reassigned to Sam; Linear team membership removed; audit issue filed."
+        },
+        "rationale": "Posts a summary report of all offboarding actions to Slack for team visibility and compliance record-keeping."
+      }
+    ],
+    "summary": "This plan closes all direct, team-derived, and link-sharing access paths Dana held across GitHub, Drive, and Linear, transferring the sole-owned Drive file and reassigning open issues to the successor before any revocation, and deliberately leaves Dana's org-level GitHub membership intact since no org-base grants were found requiring that irreversible last-resort step.",
+    "tokens": {
+      "input": 2381,
+      "output": 3088
+    }
+  },
+  "06-stale-cache:first": {
+    "decisions": [
+      {
+        "id": "remove-payments-core-direct",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing the explicit grant separate from team-derived access."
+      },
+      {
+        "id": "remove-payments-team",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, closing the admin-level access to payments-core that was granted via team membership rather than the direct grant."
+      },
+      {
+        "id": "remove-docs-site-direct",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, the only path granting her access to that repo."
+      },
+      {
+        "id": "remove-org-membership",
+        "operation": "github.removeOrgMember",
+        "params": {
+          "login": "dana-departing"
+        },
+        "rationale": "Removes Dana's overall acme-co organisation membership as the final, irreversible step in a full departure, held for human approval since it revokes any implicit org-wide reach not captured by the repo-specific grants above."
+      },
+      {
+        "id": "transfer-doc-1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers sole ownership of the Q4 Payments Runbook to the successor before any access removal so the document is not orphaned."
+      },
+      {
+        "id": "remove-doc-2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap doc, which is owned by the successor and needs only her direct grant revoked."
+      },
+      {
+        "id": "remove-doc-3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes so her personal access path is closed."
+      },
+      {
+        "id": "remove-doc-3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader permission on Public Launch Notes because it still constitutes access Dana holds after departure; a human should decide whether to restore public sharing afterward if the doc must stay public."
+      },
+      {
+        "id": "reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to the successor so ownership of active work continues uninterrupted."
+      },
+      {
+        "id": "reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade issue to the successor so the backlog item has a valid, active owner."
+      },
+      {
+        "id": "remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core Linear team since she no longer needs team-scoped access after issue reassignment."
+      },
+      {
+        "id": "audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Recorded offboarding actions for dana@acme.test: GitHub repo/team/org access removed, Drive ownership transferred and permissions (including link-sharing) revoked, Linear issues reassigned to sam@acme.test and team membership removed."
+        },
+        "rationale": "Creates a permanent audit trail of the offboarding actions taken for Dana in Linear for future reference."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing (dana@acme.test): removed GitHub repo/team access and org membership (pending approval), transferred sole-owned Drive file to Sam, removed Dana's direct Drive permissions and the public link-sharing permission on doc-3 (flagged for human review), reassigned two Linear issues to Sam, and removed her Linear team membership."
+        },
+        "rationale": "Posts a summary report of all offboarding actions to Slack for team visibility and record-keeping."
+      }
+    ],
+    "summary": "This plan closes every direct, team-based, and link-sharing path Dana retains across GitHub, Drive, and Linear—transferring her sole-owned Drive file before revocation, reassigning her active Linear issues to Sam, and holding the irreversible org-membership removal for human approval—while flagging the removed public link on doc-3 for a human decision on whether to restore public access; it does not alter Sam's own ownership or permissions on doc-2/doc-3 beyond removing Dana's grants.",
+    "tokens": {
+      "input": 2381,
+      "output": 3146
+    }
+  },
+  "07-drive-sole-owner:first": {
+    "decisions": [
+      {
+        "id": "transfer-doc1-ownership",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Dana is the sole owner of the Q4 Payments Runbook, so ownership must move to successor Sam before any access removal to avoid orphaning the file."
+      },
+      {
+        "id": "remove-payments-core-direct",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing that access path independent of team-derived access."
+      },
+      {
+        "id": "remove-payments-team-membership",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, which revokes the admin-level access to payments-core granted via team membership."
+      },
+      {
+        "id": "remove-docs-site-direct",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, the only access path to that repo."
+      },
+      {
+        "id": "remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on Team Roadmap, which is owned by the successor and needs no further transfer."
+      },
+      {
+        "id": "remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing the personal access path."
+      },
+      {
+        "id": "remove-doc3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant on Public Launch Notes since Dana still holds access through it, but a human should decide whether to restore public sharing afterward."
+      },
+      {
+        "id": "reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to successor Sam so ongoing work is not orphaned."
+      },
+      {
+        "id": "reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade issue to successor Sam so the backlog item has a valid owner."
+      },
+      {
+        "id": "remove-core-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her open issues have been reassigned to the successor."
+      },
+      {
+        "id": "create-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Records that Dana Departing's GitHub, Drive, and Linear access were reviewed and revoked/transferred as part of offboarding, including reassignment of CORE-101 and CORE-102 to Sam Successor."
+        },
+        "rationale": "Creates a permanent audit trail in Linear documenting the offboarding actions taken for Dana."
+      },
+      {
+        "id": "post-slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: GitHub repo access removed (payments-core direct + team:payments, docs-site direct); Drive ownership of Q4 Payments Runbook transferred to Sam, writer access on Team Roadmap and Public Launch Notes removed, and link-sharing on Public Launch Notes revoked pending human review; Linear issues CORE-101 and CORE-102 reassigned to Sam and team membership removed; org membership left intact as no org-wide grants were found."
+        },
+        "rationale": "Posts a summary of all offboarding actions to Slack for team visibility and record-keeping."
+      }
+    ],
+    "summary": "This plan transfers Dana's sole-owned Drive file to her successor Sam before revoking all her direct and team-based GitHub, Drive, and Linear access, including the public link-sharing permission on a file she still writes to, and closes with an audit issue and Slack report; it deliberately leaves Dana's org-level GitHub membership intact since no org-wide access grant was identified, and flags the link-sharing removal for human review on whether to restore public access.",
+    "tokens": {
+      "input": 2381,
+      "output": 2936
+    }
+  },
+  "08-successor-also-departing:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core since she is departing and no longer needs repo access."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, which is the source of her admin-level access to payments-core via team inheritance."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site as part of full repo access revocation."
+      },
+      {
+        "id": "gh-remove-org-member",
+        "operation": "github.removeOrgMember",
+        "params": {
+          "login": "dana-departing"
+        },
+        "rationale": "Removes Dana entirely from the acme-co organization now that all her specific repo and team grants have been revoked, fully closing org-base access; this is irreversible and requires human approval."
+      },
+      {
+        "id": "drive-remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Team Roadmap, a file she does not own, closing her only access path to it."
+      },
+      {
+        "id": "drive-remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing the named-user path to the file."
+      },
+      {
+        "id": "drive-remove-doc3-anyone-link",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader permission on Public Launch Notes because Dana still holds access through that public link even after her named permission is removed; a human should decide whether to restore public sharing afterwards since the file's intended visibility is unclear."
+      },
+      {
+        "id": "linear-unassign-i1",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": null,
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Unassigns CORE-101 rather than reassigning to the successor, because the designated successor is the same departing user and thus not a valid assignment target."
+      },
+      {
+        "id": "linear-unassign-i2",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": null,
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Unassigns CORE-102 rather than reassigning to the successor, because the designated successor is the same departing user and thus not a valid assignment target."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the t-core Linear team since she is departing and no longer needs team-level access."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Automated offboarding executed for dana@acme.test: revoked GitHub direct and team-based repo access, removed org membership, revoked Drive permissions on doc-2 and doc-3 (including a public link-sharing grant flagged for human review), unassigned two open Linear issues because the listed successor is the same departing user, and removed Linear team membership. NOTE: doc-1 'Q4 Payments Runbook' is solely owned by Dana; no valid successor was available (the provided successor is the departing user herself), so ownership transfer was skipped and this file requires manual reassignment by a human before her access can be safely revoked."
+        },
+        "rationale": "Creates a permanent audit record of all offboarding actions taken and flags the unresolved sole-ownership file for human follow-up."
+      },
+      {
+        "id": "slack-post-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding completed for Dana Departing (dana@acme.test): GitHub repo/team/org access revoked; Drive permissions removed on 'Team Roadmap' and 'Public Launch Notes' (including a public link-sharing grant that a human should review); two Linear issues (CORE-101, CORE-102) left unassigned since the provided successor was the same departing user; Linear team membership removed. UNRESOLVED: 'Q4 Payments Runbook' (doc-1) is solely owned by Dana with no valid successor available for transfer — requires manual owner reassignment."
+        },
+        "rationale": "Posts a summary of the offboarding actions and outstanding manual follow-up to the configured Slack channel for team visibility."
+      }
+    ],
+    "summary": "This plan revokes Dana's direct and team-derived GitHub access, removes her from the org, strips her Drive permissions on files she doesn't own (including a public link-sharing grant flagged for human review), unassigns her open Linear issues, and removes her Linear team membership, finishing with an audit issue and Slack report; it deliberately leaves doc-1 'Q4 Payments Runbook' untouched because she is its sole owner and the only provided successor is herself, so ownership transfer is invalid and requires human intervention.",
+    "tokens": {
+      "input": 2381,
+      "output": 4690
+    }
+  },
+  "09-irreversible-needs-approval:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on payments-core, closing the most specific access path first."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, which is the source of her admin-level access to payments-core."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site."
+      },
+      {
+        "id": "gh-remove-org-member",
+        "operation": "github.removeOrgMember",
+        "params": {
+          "login": "dana-departing"
+        },
+        "rationale": "Removing Dana from the acme-co organization closes the org-base write access she otherwise still holds on payments-core, web-app, and docs-site, which cannot be revoked per-repo since it derives from org membership; this is irreversible and requires human approval."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Dana is the sole owner of the Q4 Payments Runbook, so ownership must be transferred to the successor before any access revocation to avoid orphaning the file."
+      },
+      {
+        "id": "drive-remove-doc2-dana",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap, which she does not own and no longer needs to edit."
+      },
+      {
+        "id": "drive-remove-doc3-dana",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes."
+      },
+      {
+        "id": "drive-remove-doc3-anyone",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant on Public Launch Notes since Dana still holds access through this public link path; a human should decide whether to restore public sharing afterward."
+      },
+      {
+        "id": "linear-reassign-i1",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to the successor so ongoing work is not orphaned."
+      },
+      {
+        "id": "linear-reassign-i2",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade issue to the successor to keep it actionable after Dana's departure."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her issues have been reassigned, ending her team-level access."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Records that Dana Departing's GitHub, Drive, and Linear access has been revoked or transferred as part of standard offboarding, including a public Drive link that was closed and may need human review."
+        },
+        "rationale": "Creates a permanent audit trail in Linear documenting the offboarding actions taken for Dana."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: GitHub org membership and repo access removed, Drive ownership/permissions transferred or revoked (including a public link on 'Public Launch Notes' that a human should review), and Linear issues reassigned to Sam Successor."
+        },
+        "rationale": "Posts a summary of the offboarding actions to Slack for team visibility and follow-up on the flagged public link."
+      }
+    ],
+    "summary": "This plan removes Dana's direct, team, and org-based access across GitHub, transfers her sole-owned Drive file and strips her remaining Drive permissions (including a public link flagged for human review), reassigns her open Linear issues to Sam and removes her team membership, and closes with an audit issue and Slack report; it deliberately leaves Sam's own ownership and unrelated collaborators untouched.",
+    "tokens": {
+      "input": 2431,
+      "output": 3310
+    }
+  },
+  "11-two-surviving-paths:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator grant on payments-core, closing the direct-access path independent of team-derived grants."
+      },
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the payments team, revoking the admin-level access on payments-core granted via that team."
+      },
+      {
+        "id": "gh-remove-team-oncall",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "oncall",
+          "login": "dana-departing",
+          "repo": "acme-co/payments-core"
+        },
+        "rationale": "Removes Dana from the oncall team, revoking the maintain-level access on payments-core granted via that team."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator grant on docs-site since no other access path to this repo was found."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers sole ownership of the Q4 Payments Runbook to the successor before any access removal so the file is not orphaned."
+      },
+      {
+        "id": "drive-remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap doc, which is owned by the successor and needs no ownership transfer."
+      },
+      {
+        "id": "drive-remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's direct writer permission on Public Launch Notes, closing her named access path to the file."
+      },
+      {
+        "id": "drive-remove-doc3-link-sharing",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "anyone",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant on Public Launch Notes since it constitutes access Dana retains after her named permission is revoked; a human should decide whether to restore public sharing afterward."
+      },
+      {
+        "id": "linear-reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to the successor so ownership of the work continues uninterrupted."
+      },
+      {
+        "id": "linear-reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the ledger client upgrade issue to the successor so it remains actionable after Dana's departure."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team since her issues have been reassigned and she no longer needs team access."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Records that Dana Departing's GitHub, Drive, and Linear access were reviewed and revoked/reassigned as part of offboarding, including transfer of sole-owned Drive file doc-1 and removal of a public link-sharing grant on doc-3."
+        },
+        "rationale": "Creates a durable audit record in Linear documenting the offboarding actions taken for traceability."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing: removed GitHub direct and team-based access (payments-core, docs-site), transferred sole Drive ownership of the Q4 Payments Runbook to Sam, removed Dana's writer permissions on two other Drive docs, removed a public link-sharing permission on Public Launch Notes for human review, reassigned two open Linear issues to Sam, and removed Linear team membership."
+        },
+        "rationale": "Posts a summary of all offboarding actions to Slack for team visibility and record-keeping."
+      }
+    ],
+    "summary": "This plan closes every direct, team-based, and link-sharing access path Dana held across GitHub, Drive, and Linear, transferring her sole-owned Drive file and reassigning her open issues to the successor before any revocation, and finishes with an audit issue and Slack report; it deliberately leaves Dana's org membership intact since no org-base grant was found, and flags the removed public link-sharing permission on doc-3 for human review on whether to restore it.",
+    "tokens": {
+      "input": 2406,
+      "output": 2704
+    }
+  },
+  "12-happy-path:first": {
+    "decisions": [
+      {
+        "id": "remove-docs-site-collab",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "acme-co/docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write access to acme-co/docs-site, which is her only listed GitHub grant."
+      },
+      {
+        "id": "transfer-doc1-ownership",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Dana is the sole owner of 'Q4 Payments Runbook'; ownership must move to successor Sam before her access is revoked to avoid orphaning the file."
+      },
+      {
+        "id": "remove-doc2-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on 'Team Roadmap', a file she does not own, closing her direct access path."
+      },
+      {
+        "id": "remove-doc3-writer",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on 'Public Launch Notes', a file she does not own, closing her direct access path."
+      },
+      {
+        "id": "reassign-core-101",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress issue 'Fix settlement retry' to successor Sam so work continues without Dana's involvement."
+      },
+      {
+        "id": "reassign-core-102",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the to-do issue 'Upgrade ledger client' to successor Sam so it remains owned by an active team member."
+      },
+      {
+        "id": "remove-core-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the Core team now that her open issues have been reassigned, closing her Linear team access."
+      },
+      {
+        "id": "create-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Automated offboarding reassigned CORE-101 and CORE-102 to Sam, removed Dana's Core team membership, revoked her GitHub collaborator access on docs-site, transferred sole ownership of the Q4 Payments Runbook to Sam, and removed her writer permissions on Team Roadmap and Public Launch Notes."
+        },
+        "rationale": "Creates a permanent audit trail in Linear documenting exactly what access was revoked or transferred during this offboarding."
+      },
+      {
+        "id": "post-slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing (dana@acme.test): GitHub write access to docs-site revoked; sole ownership of 'Q4 Payments Runbook' transferred to Sam; writer access on 'Team Roadmap' and 'Public Launch Notes' revoked; Linear issues CORE-101 and CORE-102 reassigned to Sam; Core team membership removed. Org-level GitHub membership was left intact as no further access depended on it."
+        },
+        "rationale": "Notifies the team via Slack of the completed offboarding actions and any items intentionally left unchanged for transparency."
+      }
+    ],
+    "summary": "This plan transfers the one Drive file Dana solely owned to her successor Sam before revoking her direct GitHub, Drive, and Linear access, reassigns her open Linear issues, removes her Core team membership, and closes with an audit issue and Slack report; it deliberately leaves Dana's org-level GitHub membership intact since no other org-based repo access was found and full org removal is reserved as a last-resort, human-approved step.",
+    "tokens": {
+      "input": 2308,
+      "output": 3082
+    }
+  },
+  "10-idempotent-replay:first": {
+    "decisions": [
+      {
+        "id": "gh-remove-team-payments",
+        "operation": "github.removeTeamMember",
+        "params": {
+          "slug": "payments",
+          "login": "dana-departing",
+          "repo": "payments-core"
+        },
+        "rationale": "Removes Dana's membership in the payments team, which is the source of her admin-level access to payments-core via team:payments."
+      },
+      {
+        "id": "gh-remove-direct-payments-core",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "payments-core",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's separate direct write grant on payments-core so no residual direct access remains after the team removal."
+      },
+      {
+        "id": "gh-remove-direct-docs-site",
+        "operation": "github.removeCollaborator",
+        "params": {
+          "repo": "docs-site",
+          "login": "dana-departing",
+          "previousPermission": "write"
+        },
+        "rationale": "Removes Dana's direct write collaborator record on docs-site, her only access path to that repo."
+      },
+      {
+        "id": "drive-transfer-doc1",
+        "operation": "drive.transferOwnership",
+        "params": {
+          "fileId": "doc-1"
+        },
+        "rationale": "Transfers ownership of the Q4 Payments Runbook to the successor before any permission cleanup since Dana is the sole owner and the file would otherwise be orphaned."
+      },
+      {
+        "id": "drive-remove-doc1-dana",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-1",
+          "permissionId": "p1",
+          "email": "dana@acme.test",
+          "role": "owner"
+        },
+        "rationale": "Removes Dana's residual permission entry on the runbook left over after ownership transfer so she retains no writer/owner access."
+      },
+      {
+        "id": "drive-remove-doc2-dana",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-2",
+          "permissionId": "p3",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's writer permission on the Team Roadmap, which is owned by the successor and requires no ownership transfer."
+      },
+      {
+        "id": "drive-remove-doc3-dana",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p5",
+          "email": "dana@acme.test",
+          "role": "writer"
+        },
+        "rationale": "Removes Dana's named writer permission on the Public Launch Notes document."
+      },
+      {
+        "id": "drive-remove-doc3-anyone",
+        "operation": "drive.removePermission",
+        "params": {
+          "fileId": "doc-3",
+          "permissionId": "p6",
+          "email": "",
+          "role": "reader"
+        },
+        "rationale": "Removes the 'anyone with the link' reader grant on the Public Launch Notes document since Dana still holds access through this public link and it must be closed as part of offboarding; a human should decide afterwards whether to restore public sharing."
+      },
+      {
+        "id": "linear-reassign-i1",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-1",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-101"
+        },
+        "rationale": "Reassigns the in-progress settlement retry issue to the successor so work continues without Dana as owner."
+      },
+      {
+        "id": "linear-reassign-i2",
+        "operation": "linear.reassignIssue",
+        "params": {
+          "issueId": "i-2",
+          "assigneeId": "u-sam",
+          "previousAssigneeId": "u-dana",
+          "identifier": "CORE-102"
+        },
+        "rationale": "Reassigns the todo ledger client upgrade issue to the successor to maintain ownership continuity."
+      },
+      {
+        "id": "linear-remove-team-membership",
+        "operation": "linear.removeTeamMembership",
+        "params": {
+          "membershipId": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        },
+        "rationale": "Removes Dana's membership on the core team now that her issues have been reassigned, closing her Linear team access."
+      },
+      {
+        "id": "linear-audit-issue",
+        "operation": "linear.createAuditIssue",
+        "params": {
+          "teamId": "t-core",
+          "title": "Offboarding audit: Dana Departing",
+          "description": "Record of offboarding actions taken for dana@acme.test across GitHub, Drive, and Linear, including reassigned issues CORE-101 and CORE-102 and removed team membership."
+        },
+        "rationale": "Creates a permanent audit trail issue documenting the offboarding actions for future reference."
+      },
+      {
+        "id": "slack-report",
+        "operation": "slack.postReport",
+        "params": {
+          "text": "Offboarding complete for Dana Departing (dana@acme.test): removed GitHub team and direct repo access (payments-core, docs-site); transferred sole-owned Drive file 'Q4 Payments Runbook' to sam@acme.test and removed residual/writer/link-sharing permissions on affected Drive files; reassigned open Linear issues CORE-101 and CORE-102 to sam@acme.test and removed core team membership. Public link-sharing on 'Public Launch Notes' was revoked and should be reviewed by a human if public access is still needed. Org membership was left intact as no organization-base access grants were found."
+        },
+        "rationale": "Posts a summary report to the configured Slack channel so stakeholders can review and approve the offboarding actions taken."
+      }
+    ],
+    "summary": "This plan closes all identified direct and team-based access paths for Dana across GitHub, Drive, and Linear, transferring her sole-owned Drive file and reassigning her open issues to the successor before revoking any permissions, and it flags the public link-sharing removal for human review; it deliberately leaves her organization membership intact since no org-base access grants were found, avoiding the irreversible last-resort action of full org removal.",
+    "tokens": {
+      "input": 2425,
+      "output": 2900
+    }
+  }
+}

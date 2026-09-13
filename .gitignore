@@ -39,3 +39,11 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local oauth credentials
+google-oauth.json
+
+# Run artifacts: traces carry real logins and email addresses from live runs,
+# and the database holds run history. Both are reproducible by running the tool.
+traces/
+data/

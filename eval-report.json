@@ -1,0 +1,365 @@
+{
+  "generatedAt": "2026-09-13T19:58:03.181Z",
+  "mode": "replay",
+  "plannerModel": "claude-sonnet-5 (replayed, 12 recorded)",
+  "metrics": {
+    "scenarios": 12,
+    "taskSuccessRate": 1,
+    "silentFailureRate": 0,
+    "silentFailuresCaught": 9,
+    "silentFailuresMissed": 0,
+    "rollbackCorrectness": {
+      "applicable": 1,
+      "correct": 1,
+      "rate": 1
+    },
+    "costUsdTotal": 0.43997400000000003,
+    "costUsdPerRun": 0.0366645,
+    "latencyP50Ms": 1,
+    "latencyP95Ms": 43
+  },
+  "scenarios": [
+    {
+      "id": "01-inherited-team-access",
+      "title": "Admin survives via team membership",
+      "proves": "The headline silent failure. Removing the direct collaborator returns 204 while admin persists through team:payments. Verify must catch it and remediate.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 3,
+      "costUsd": 0.036292000000000005,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        },
+        {
+          "assertion": "{\"type\":\"github-not-team-member\",\"slug\":\"payments\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "present": false
+          }
+        }
+      ],
+      "summary": "All 14 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-01-inherited-team-access.jsonl"
+    },
+    {
+      "id": "02-org-base-permission",
+      "title": "Access with no collaborator or team record at all",
+      "proves": "The org's default repository permission grants every member write on every repo. No per-repo record exists to delete, so a per-repo revoke cannot close it.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.039792,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 15 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-02-org-base-permission.jsonl"
+    },
+    {
+      "id": "03-drive-link-sharing",
+      "title": "Link sharing survives removing the user's permission",
+      "proves": "An `anyone with the link` permission is a separate ACL record. Deleting the departing user's permission returns 204 and leaves the file world-readable.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.034622,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"drive-no-access\",\"fileId\":\"doc-3\",\"email\":\"dana@acme.test\"}",
+          "pass": true,
+          "observed": {
+            "viaUser": false,
+            "viaLink": false
+          }
+        }
+      ],
+      "summary": "All 12 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-03-drive-link-sharing.jsonl"
+    },
+    {
+      "id": "04-commit-timeout-rollback",
+      "title": "Mid-commit API timeout rolls back cleanly",
+      "proves": "A failure part-way through commit must undo everything already applied, in reverse order, leaving no partial state.",
+      "status": "rolled-back",
+      "taskSuccess": true,
+      "claimedSuccess": false,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": true,
+      "durationMs": 0,
+      "costUsd": 0.03252,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"world-unchanged\"}",
+          "pass": true,
+          "observed": {
+            "same": true
+          }
+        }
+      ],
+      "summary": "Commit failed on gh-remove-direct-payments-core: request timed out: github.removeCollaborator. Completed actions were rolled back in reverse order.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-04-commit-timeout-rollback.jsonl"
+    },
+    {
+      "id": "05-rate-limited",
+      "title": "429 with Retry-After is retried, not reported as success",
+      "proves": "Rate limiting must produce a backoff and a real write, never a phantom success.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 43,
+      "costUsd": 0.035642,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 12 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-05-rate-limited.jsonl"
+    },
+    {
+      "id": "06-stale-cache",
+      "title": "A stale read returns pre-revocation state",
+      "proves": "Verify reads a cache that still shows the old grant. The agent must not conclude the revoke failed and must not conclude it succeeded — it must re-read and end in a correct state.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 1,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.036222000000000004,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 19 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-06-stale-cache.jsonl"
+    },
+    {
+      "id": "07-drive-sole-owner",
+      "title": "A file whose only owner is departing",
+      "proves": "Ownership must transfer before access is revoked, or the file is orphaned with nobody able to administer it.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 1,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.034122,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"drive-owner\",\"fileId\":\"doc-1\",\"email\":\"sam@acme.test\"}",
+          "pass": true,
+          "observed": {
+            "ownerEmail": "sam@acme.test"
+          }
+        },
+        {
+          "assertion": "{\"type\":\"drive-no-access\",\"fileId\":\"doc-1\",\"email\":\"dana@acme.test\"}",
+          "pass": true,
+          "observed": {
+            "viaUser": false,
+            "viaLink": false
+          }
+        }
+      ],
+      "summary": "All 17 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-07-drive-sole-owner.jsonl"
+    },
+    {
+      "id": "08-successor-also-departing",
+      "title": "The reassignment target is also leaving",
+      "proves": "Handing a resource to someone who is also departing is worse than leaving it unassigned. The precondition must refuse the transfer rather than launder the problem.",
+      "status": "unresolved",
+      "taskSuccess": true,
+      "claimedSuccess": false,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 1,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.051662,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"drive-owner\",\"fileId\":\"doc-1\",\"email\":\"dana@acme.test\"}",
+          "pass": true,
+          "observed": {
+            "ownerEmail": "dana@acme.test"
+          }
+        }
+      ],
+      "summary": "1 postcondition(s) still failing after 0 remediation round(s). Access may persist.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-08-successor-also-departing.jsonl"
+    },
+    {
+      "id": "09-irreversible-needs-approval",
+      "title": "An irreversible action is never taken without a human",
+      "proves": "With approval withheld, org removal must not run — even though it is the only way to close the remaining access.",
+      "status": "unresolved",
+      "taskSuccess": true,
+      "claimedSuccess": false,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 4,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.037961999999999996,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-has-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "write"
+          }
+        }
+      ],
+      "summary": "4 postcondition(s) still failing after 1 remediation round(s). Access may persist.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-09-irreversible-needs-approval.jsonl"
+    },
+    {
+      "id": "10-idempotent-replay",
+      "title": "Replaying a completed run writes nothing twice",
+      "proves": "Idempotency keys are recorded before the call, so a resumed or repeated run skips work already done instead of double-writing.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 0,
+      "remediationRounds": 0,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0.03385,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 12 postconditions independently re-read and passed. Replay wrote 0 new action(s).",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-10-idempotent-replay.jsonl"
+    },
+    {
+      "id": "11-two-surviving-paths",
+      "title": "Access survives through two teams at once",
+      "proves": "Closing one inherited path is not enough. The remediation loop must run until an independent re-read agrees, not until one fix has been applied.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 1,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 0,
+      "costUsd": 0.031852,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        },
+        {
+          "assertion": "{\"type\":\"github-not-team-member\",\"slug\":\"payments\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "present": false
+          }
+        },
+        {
+          "assertion": "{\"type\":\"github-not-team-member\",\"slug\":\"oncall\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "present": false
+          }
+        }
+      ],
+      "summary": "All 19 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-11-two-surviving-paths.jsonl"
+    },
+    {
+      "id": "12-happy-path",
+      "title": "A plain revoke with no inherited paths",
+      "proves": "No false positives. When there is nothing hidden, verify passes first time and no remediation runs.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 1,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 0,
+      "costUsd": 0.035436,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 14 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-12-happy-path.jsonl"
+    }
+  ]
+}

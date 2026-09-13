@@ -1,0 +1,219 @@
+{
+  "target": {
+    "githubLogin": "dana-departing",
+    "email": "dana@acme.test",
+    "name": "Dana Departing",
+    "successorEmail": "sam@acme.test",
+    "successorGithubLogin": "sam-successor"
+  },
+  "slackChannel": "#offboarding",
+  "id": "02-org-base-permission",
+  "title": "Access with no collaborator or team record at all",
+  "proves": "The org's default repository permission grants every member write on every repo. No per-repo record exists to delete, so a per-repo revoke cannot close it.",
+  "world": {
+    "github": {
+      "org": "acme-co",
+      "defaultRepoPermission": "write",
+      "repos": [
+        {
+          "name": "payments-core",
+          "archived": false
+        },
+        {
+          "name": "web-app",
+          "archived": false
+        },
+        {
+          "name": "docs-site",
+          "archived": false
+        }
+      ],
+      "orgMembers": [
+        {
+          "login": "dana-departing",
+          "role": "member",
+          "state": "active"
+        },
+        {
+          "login": "sam-successor",
+          "role": "member",
+          "state": "active"
+        }
+      ],
+      "teams": [
+        {
+          "slug": "payments",
+          "id": 1,
+          "name": "Payments"
+        },
+        {
+          "slug": "web",
+          "id": 2,
+          "name": "Web"
+        }
+      ],
+      "teamRepos": [
+        {
+          "slug": "payments",
+          "repo": "payments-core",
+          "permission": "admin"
+        },
+        {
+          "slug": "web",
+          "repo": "web-app",
+          "permission": "write"
+        }
+      ],
+      "teamMembers": [
+        {
+          "slug": "payments",
+          "login": "dana-departing",
+          "role": "member"
+        },
+        {
+          "slug": "web",
+          "login": "sam-successor",
+          "role": "member"
+        }
+      ],
+      "directCollaborators": [
+        {
+          "repo": "payments-core",
+          "login": "dana-departing",
+          "permission": "write"
+        },
+        {
+          "repo": "docs-site",
+          "login": "dana-departing",
+          "permission": "write"
+        }
+      ]
+    },
+    "drive": {
+      "files": [
+        {
+          "id": "doc-1",
+          "name": "Q4 Payments Runbook",
+          "ownerEmail": "dana@acme.test",
+          "trashed": false
+        },
+        {
+          "id": "doc-2",
+          "name": "Team Roadmap",
+          "ownerEmail": "sam@acme.test",
+          "trashed": false
+        },
+        {
+          "id": "doc-3",
+          "name": "Public Launch Notes",
+          "ownerEmail": "sam@acme.test",
+          "trashed": false
+        }
+      ],
+      "permissions": [
+        {
+          "id": "p1",
+          "fileId": "doc-1",
+          "type": "user",
+          "role": "owner",
+          "emailAddress": "dana@acme.test"
+        },
+        {
+          "id": "p2",
+          "fileId": "doc-2",
+          "type": "user",
+          "role": "owner",
+          "emailAddress": "sam@acme.test"
+        },
+        {
+          "id": "p3",
+          "fileId": "doc-2",
+          "type": "user",
+          "role": "writer",
+          "emailAddress": "dana@acme.test"
+        },
+        {
+          "id": "p4",
+          "fileId": "doc-3",
+          "type": "user",
+          "role": "owner",
+          "emailAddress": "sam@acme.test"
+        },
+        {
+          "id": "p5",
+          "fileId": "doc-3",
+          "type": "user",
+          "role": "writer",
+          "emailAddress": "dana@acme.test"
+        },
+        {
+          "id": "p6",
+          "fileId": "doc-3",
+          "type": "anyone",
+          "role": "reader"
+        }
+      ]
+    },
+    "linear": {
+      "users": [
+        {
+          "id": "u-dana",
+          "email": "dana@acme.test",
+          "name": "Dana Departing",
+          "active": true
+        },
+        {
+          "id": "u-sam",
+          "email": "sam@acme.test",
+          "name": "Sam Successor",
+          "active": true
+        }
+      ],
+      "teams": [
+        {
+          "id": "t-core",
+          "key": "CORE",
+          "name": "Core"
+        }
+      ],
+      "memberships": [
+        {
+          "id": "m-dana",
+          "teamId": "t-core",
+          "userId": "u-dana"
+        }
+      ],
+      "issues": [
+        {
+          "id": "i-1",
+          "identifier": "CORE-101",
+          "title": "Fix settlement retry",
+          "teamId": "t-core",
+          "assigneeId": "u-dana",
+          "state": "In Progress"
+        },
+        {
+          "id": "i-2",
+          "identifier": "CORE-102",
+          "title": "Upgrade ledger client",
+          "teamId": "t-core",
+          "assigneeId": "u-dana",
+          "state": "Todo"
+        }
+      ]
+    },
+    "slack": {
+      "messages": []
+    }
+  },
+  "approve": "all",
+  "expected": {
+    "assertions": [
+      {
+        "type": "github-no-access",
+        "repo": "docs-site",
+        "login": "dana-departing"
+      }
+    ]
+  }
+}

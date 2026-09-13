@@ -6,21 +6,36 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "eval": "tsx scripts/eval.ts",
+    "smoke": "tsx scripts/smoke.ts",
+    "build:scenarios": "tsx scripts/build-scenarios.ts",
+    "test": "tsx --test src/checks/*.test.ts src/core/*.test.ts src/agent/*.test.ts src/actions/*.test.ts",
+    "offboard": "tsx scripts/offboard.ts",
+    "seed:github": "tsx scripts/seed-github.ts",
+    "preflight": "tsx scripts/preflight.ts",
+    "google:auth": "tsx scripts/google-auth.ts",
+    "seed:drive": "tsx scripts/seed-drive.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.125.0",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^17.4.2",
+    "googleapis": "^180.0.0",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.5",
     "tailwindcss": "^4",
+    "tsx": "^4.23.13",
     "typescript": "^5"
   }
 }

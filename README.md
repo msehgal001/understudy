@@ -300,7 +300,9 @@ NAIVE vs MODEL
 ```
 
 Live wall-clock, measured against the real GitHub org, Drive, Linear and Slack:
-**~44s and ~$0.035 per run**, measured end to end from the trace of run `run-mu0a9qic`. The per-scenario millisecond timings the replay
+**~40s and ~$0.033 per run**, measured end to end from the trace of run `run-mu08jfm5`.
+Across the eleven complete live runs in `traces/` the spread is 18s to 51s, median 28s;
+a complete run is one that reached both `commit:done` and a verify phase. The per-scenario millisecond timings the replay
 harness reports are the harness, not the agent, so they are deliberately not
 quoted as latency anywhere in this project.
 

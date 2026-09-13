@@ -1,0 +1,559 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An offboarding agent that removes a departing employee's access across GitHub, Drive, Linear and Slack, then independently re-reads live state to prove it actually happened.">
+<meta name="color-scheme" content="light dark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Understudy">
+<meta property="og:description" content="An offboarding agent that removes a departing employee's access across GitHub, Drive, Linear and Slack, then independently re-reads live state to prove it actually happened.">
+<meta name="twitter:card" content="summary">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 16 16%22><text y=%2213%22 font-size=%2213%22>&#128269;</text></svg>">
+<title>Understudy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap">
+
+<style>
+  :root {
+    --ground: #f6f7f8;
+    --surface: #ffffff;
+    --ink: #16191d;
+    --muted: #6b7480;
+    --faint: #98a1ab;
+    --rule: #dfe3e7;
+    --rule-soft: #eceff2;
+    --confirm: #15703a;
+    --confirm-wash: #eaf4ed;
+    --contradict: #b3372c;
+    --contradict-wash: #fbeeec;
+    --hold: #8a6510;
+    --hold-wash: #f8f1de;
+
+    --sans: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+    --mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    --display: "Newsreader", Georgia, serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #101317;
+      --surface: #171b20;
+      --ink: #e7eaee;
+      --muted: #99a2ad;
+      --faint: #6d7681;
+      --rule: #272d35;
+      --rule-soft: #1e232a;
+      --confirm: #5bbd7d;
+      --confirm-wash: #14251a;
+      --contradict: #e8796c;
+      --contradict-wash: #2a1715;
+      --hold: #d7ac52;
+      --hold-wash: #26200f;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #101317;
+    --surface: #171b20;
+    --ink: #e7eaee;
+    --muted: #99a2ad;
+    --faint: #6d7681;
+    --rule: #272d35;
+    --rule-soft: #1e232a;
+    --confirm: #5bbd7d;
+    --confirm-wash: #14251a;
+    --contradict: #e8796c;
+    --contradict-wash: #2a1715;
+    --hold: #d7ac52;
+    --hold-wash: #26200f;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding-inline: 20px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page { max-width: 760px; margin: 0 auto; padding-block: 56px 80px; }
+  .measure { max-width: 62ch; }
+
+  p { margin: 0 0 1.1em; }
+  p:last-child { margin-bottom: 0; }
+
+  .mono { font-family: var(--mono); font-variant-ligatures: none; }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    display: flex; flex-direction: column; gap: 18px;
+    padding-bottom: 26px; border-bottom: 2px solid var(--ink);
+  }
+  .eyebrow {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--muted);
+    display: flex; flex-wrap: wrap; gap: 10px 18px;
+  }
+  h1 {
+    font-family: var(--display); font-weight: 400;
+    font-size: clamp(40px, 8vw, 62px); line-height: 1.02;
+    letter-spacing: -0.015em; margin: 0; text-wrap: balance;
+  }
+  .standfirst {
+    font-family: var(--display); font-size: clamp(19px, 2.6vw, 23px);
+    line-height: 1.45; color: var(--ink); margin: 0; max-width: 34ch;
+  }
+
+  /* ---------- sections ---------- */
+
+  section { margin-top: 56px; }
+
+  h2 {
+    font-family: var(--sans); font-weight: 600; font-size: 13px;
+    letter-spacing: 0.13em; text-transform: uppercase; color: var(--muted);
+    margin: 0 0 20px; padding-bottom: 9px; border-bottom: 1px solid var(--rule);
+  }
+  h3 {
+    font-family: var(--sans); font-weight: 600; font-size: 16px;
+    margin: 0 0 8px; letter-spacing: -0.005em;
+  }
+
+  .lede { font-size: 18px; line-height: 1.55; }
+
+  /* ---------- the contradiction ---------- */
+
+  .evidence {
+    border: 1px solid var(--rule); background: var(--surface);
+    border-radius: 3px; overflow: hidden; margin: 28px 0;
+  }
+  .evidence-head {
+    font-family: var(--mono); font-size: 11.5px; color: var(--muted);
+    padding: 11px 18px; border-bottom: 1px solid var(--rule-soft);
+    display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline;
+  }
+  .split { display: grid; grid-template-columns: 1fr 1fr; }
+  @media (max-width: 560px) { .split { grid-template-columns: 1fr; } }
+
+  .half { padding: 22px 18px 24px; }
+  .half + .half { border-left: 1px solid var(--rule); }
+  @media (max-width: 560px) {
+    .half + .half { border-left: 0; border-top: 1px solid var(--rule); }
+  }
+  .half-a { background: var(--hold-wash); }
+  .half-b { background: var(--contradict-wash); }
+
+  .half-label {
+    font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.1em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 14px;
+  }
+  .verdict {
+    font-family: var(--mono); font-size: clamp(30px, 6.5vw, 42px);
+    line-height: 1; font-weight: 500; letter-spacing: -0.02em;
+  }
+  .verdict-a { color: var(--hold); }
+  .verdict-b { color: var(--contradict); }
+  .verdict-note {
+    font-size: 13.5px; color: var(--muted); margin-top: 11px; line-height: 1.45;
+  }
+  .verdict-note code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+
+  .evidence-foot {
+    padding: 13px 18px; border-top: 1px solid var(--rule-soft);
+    font-size: 13.5px; color: var(--muted);
+  }
+  .evidence-foot strong { color: var(--ink); font-weight: 600; }
+
+  .legend {
+    font-size: 13px; color: var(--faint); margin-top: -14px; margin-bottom: 24px;
+    display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center;
+  }
+  .swatch {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--mono); font-size: 11px;
+  }
+  .swatch i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; }
+  .sw-hold i { background: var(--hold); }
+  .sw-bad i { background: var(--contradict); }
+  .sw-ok i { background: var(--confirm); }
+
+  /* ---------- code ---------- */
+
+  .wire {
+    font-family: var(--mono); font-size: 13px; line-height: 1.75;
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 16px 18px; margin: 22px 0;
+    overflow-x: auto; white-space: pre; color: var(--ink);
+  }
+  .wire .c { color: var(--muted); }
+  .wire .ok { color: var(--confirm); }
+  .wire .bad { color: var(--contradict); }
+
+  /* ---------- phases ---------- */
+
+  ol.phases { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+  ol.phases li {
+    display: grid; grid-template-columns: 34px 1fr; gap: 14px;
+    padding: 13px 0; border-bottom: 1px solid var(--rule-soft); align-items: start;
+  }
+  ol.phases li:last-child { border-bottom: 0; }
+  .pnum {
+    font-family: var(--mono); font-size: 12px; color: var(--faint);
+    padding-top: 2px; font-variant-numeric: tabular-nums;
+  }
+  .pname { font-family: var(--mono); font-size: 14px; font-weight: 500; }
+  .pdesc { font-size: 14.5px; color: var(--muted); line-height: 1.5; margin-top: 2px; }
+
+  /* ---------- headline metric ---------- */
+
+  .headline {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 10px 20px;
+    padding: 26px 0 22px; border-top: 2px solid var(--ink); border-bottom: 1px solid var(--rule);
+  }
+  .headline-fig {
+    font-family: var(--mono); font-size: clamp(46px, 11vw, 76px); line-height: 0.9;
+    font-weight: 500; letter-spacing: -0.035em; color: var(--confirm);
+  }
+  .headline-name { font-size: 17px; font-weight: 600; }
+  .headline-sub { font-size: 14px; color: var(--muted); max-width: 42ch; line-height: 1.5; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  th {
+    text-align: left; font-family: var(--mono); font-size: 10.5px;
+    letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint);
+    font-weight: 500; padding: 12px 10px 8px 0; border-bottom: 1px solid var(--rule);
+  }
+  td { padding: 9px 10px 9px 0; border-bottom: 1px solid var(--rule-soft); vertical-align: top; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-family: var(--mono); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .tablewrap { overflow-x: auto; }
+
+  .pill {
+    display: inline-block; font-family: var(--mono); font-size: 11px;
+    padding: 1px 7px; border-radius: 2px; white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .pill-ok { color: var(--confirm); background: var(--confirm-wash); border-color: color-mix(in srgb, var(--confirm) 28%, transparent); }
+  .pill-hold { color: var(--hold); background: var(--hold-wash); border-color: color-mix(in srgb, var(--hold) 32%, transparent); }
+  .pill-bad { color: var(--contradict); background: var(--contradict-wash); border-color: color-mix(in srgb, var(--contradict) 30%, transparent); }
+
+  /* ---------- mutation ---------- */
+
+  .mutants { display: grid; gap: 0; margin: 22px 0 0; border-top: 1px solid var(--rule-soft); }
+  .mutant {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px;
+    padding: 11px 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .mutant .mid { font-family: var(--mono); font-size: 13.5px; }
+  .mutant .mdesc { font-size: 14px; color: var(--muted); }
+
+  /* ---------- bugs ---------- */
+
+  .bugs { display: grid; gap: 0; margin-top: 4px; }
+  .bug {
+    display: grid; grid-template-columns: 26px 1fr; gap: 14px;
+    padding: 14px 0; border-bottom: 1px solid var(--rule-soft);
+  }
+  .bug:last-child { border-bottom: 0; }
+  .bug-n {
+    font-family: var(--mono); font-size: 12px; color: var(--faint);
+    font-variant-numeric: tabular-nums; padding-top: 2px;
+  }
+  .bug-t { font-weight: 600; font-size: 15px; line-height: 1.4; }
+  .bug-d { font-size: 14.5px; color: var(--muted); line-height: 1.5; margin-top: 3px; }
+  .bug-d code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+
+  .keystone {
+    border-left: 2px solid var(--contradict); background: var(--surface);
+    padding: 18px 20px; margin: 26px 0;
+  }
+  .keystone .bug-t { font-size: 16px; }
+
+  .callout {
+    background: var(--surface); border: 1px solid var(--rule);
+    border-radius: 3px; padding: 18px 20px; margin: 24px 0; font-size: 15px;
+  }
+  .callout p { margin-bottom: 0.8em; }
+  .callout p:last-child { margin-bottom: 0; }
+
+  a { color: var(--ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  a:focus-visible { outline: 2px solid var(--contradict); outline-offset: 3px; border-radius: 2px; }
+
+  .repo {
+    display: inline-flex; align-items: center; gap: 9px; font-family: var(--mono);
+    font-size: 14px; padding: 11px 16px; border: 1px solid var(--ink);
+    border-radius: 3px; text-decoration: none; margin-top: 6px;
+  }
+  .repo:hover { background: var(--ink); color: var(--ground); }
+
+  footer {
+    margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--rule);
+    font-size: 13px; color: var(--faint); display: flex; flex-wrap: wrap; gap: 6px 18px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+</style>
+<style>
+  html { color-scheme: light dark; }
+  img { max-width: 100%; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>Offboarding agent</span>
+      <span>GitHub · Drive · Linear · Slack</span>
+      <span>claude-sonnet-5 · claude-opus-5</span>
+    </div>
+    <h1>Understudy</h1>
+    <p class="standfirst">An agent that removes a departing employee&rsquo;s access &mdash; then independently proves it actually happened.</p>
+  </header>
+
+  <section>
+    <p class="lede measure">A write that returns <span class="mono">204</span> has not told you that access is gone. It has told you that one API call succeeded. Access is frequently held through several paths at once, and a write&rsquo;s response never mentions the paths it did not touch.</p>
+    <p class="measure">This is the whole thesis, and it is not hypothetical. Here is a real exchange from a live run against a real GitHub organisation:</p>
+
+    <div class="evidence">
+      <div class="evidence-head">
+        <span>run-mu0a9qic</span>
+        <span>·</span>
+        <span>msehgal-org/payments-core</span>
+        <span>·</span>
+        <span>msehgal-builds</span>
+      </div>
+      <div class="split">
+        <div class="half half-a">
+          <div class="half-label">What the write claimed</div>
+          <div class="verdict verdict-a">204</div>
+          <p class="verdict-note"><code>DELETE /repos/{org}/{repo}/collaborators/{user}</code> &mdash; no content, no error, no hint.</p>
+        </div>
+        <div class="half half-b">
+          <div class="half-label">What the independent re-read found</div>
+          <div class="verdict verdict-b">admin</div>
+          <p class="verdict-note"><code>GET /repos/{org}/{repo}/collaborators/{user}/permission</code> &mdash; still administrator.</p>
+        </div>
+      </div>
+      <div class="evidence-foot">
+        Surviving paths <span class="mono">team:payments</span> and <span class="mono">org-base</span>. The collaborator record was deleted exactly as requested; the team grant and the organisation default were never addressed by it. <strong>GitHub documents that this endpoint returns the highest role across repository, team, organisation and enterprise, and that there is no way to tell which one produced it.</strong> It can say whether access survives. It can never say why.
+      </div>
+    </div>
+
+    <div class="legend">
+      <span class="swatch sw-hold"><i></i>claimed, unverified</span>
+      <span class="swatch sw-bad"><i></i>contradicted by state</span>
+      <span class="swatch sw-ok"><i></i>confirmed by re-read</span>
+      <span>Amber is never a success on this page. It is a claim nobody has checked yet.</span>
+    </div>
+
+    <p class="measure">Both calls succeeded. Neither is buggy. The revoke did exactly what it claimed and the access survived anyway, because the agent and the API were answering different questions.</p>
+  </section>
+
+  <section>
+    <h2>Six phases</h2>
+    <ol class="phases">
+      <li><span class="pnum">01</span><div><div class="pname">discover</div><div class="pdesc">Read-only enumeration across four apps. Records the grant <em>path</em> &mdash; <span class="mono">direct</span>, <span class="mono">team:payments</span>, <span class="mono">org-base</span>, <span class="mono">link-sharing:anyone</span> &mdash; not just the grant. Teams are enumerated organisation-wide, not derived from repositories.</div></div></li>
+      <li><span class="pnum">02</span><div><div class="pname">plan</div><div class="pdesc">The model picks operations from a whitelist. It never constructs an action, never chooses a postcondition, never sets <span class="mono">reversible</span>. Transfer-before-revoke ordering is enforced in code afterwards, not requested politely.</div></div></li>
+      <li><span class="pnum">03</span><div><div class="pname">rehearse</div><div class="pdesc">Every action runs against a shadow adapter seeded from live state, producing a full diff. The shadow models grant paths rather than booleans, so rehearsal shows the same surviving access live would. Nothing touches production.</div></div></li>
+      <li><span class="pnum">04</span><div><div class="pname">approve</div><div class="pdesc">Blocks on anything irreversible. Reversibility is a property of the operation, so a persuasive plan cannot talk its way past the gate.</div></div></li>
+      <li><span class="pnum">05</span><div><div class="pname">commit</div><div class="pdesc">Live, with idempotency keys recorded <em>before</em> the call. Any failure rolls completed work back in reverse order.</div></div></li>
+      <li><span class="pnum">06</span><div><div class="pname">verify</div><div class="pdesc">Independent live re-read. Failures generate remediation and re-enter commit, bounded at two rounds &mdash; after which the run is marked unresolved, loudly. An agent that loops forever is another way of lying.</div></div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Why the verification is trustworthy</h2>
+
+    <h3>Postconditions cannot see the write they follow</h3>
+    <p class="measure">They are built in a module that imports nothing from the action modules and receives only an adapter and a resource identity &mdash; so no write response exists in scope to capture. A spy-adapter test fails any check that returns a verdict without issuing at least one read.</p>
+    <p class="measure">The honest version of that claim: TypeScript <em>cannot</em> forbid this. If an action were one object literal, <span class="mono">apply</span> and <span class="mono">postconditions</span> would share a scope and a captured variable would compile happily. What holds is structural separation plus a test, which is a weaker claim and the true one.</p>
+
+    <h3>Two questions, two sources</h3>
+    <p class="measure">GitHub&rsquo;s permission endpoint is used as the <em>oracle</em> &mdash; did effective access survive &mdash; and never as the discoverer. The grant path is composed separately from independent enumeration reads: direct collaborators filtered by affiliation, repository teams crossed with membership, the organisation default, and an organisation-wide team walk.</p>
+
+    <h3>Verification is goal-based, not action-based</h3>
+    <p class="measure">Postconditions check that the actions taken landed. An action that was never planned has no postcondition to fail. So verify also evaluates checks derived from <em>discovery</em>: every access path found at the start must be gone at the end, whether or not the plan addressed it. The question is &ldquo;does this person still have access&rdquo;, not &ldquo;did my writes succeed&rdquo;.</p>
+
+    <h3>The eval oracle never calls a check the agent uses</h3>
+    <p class="measure">It re-implements GitHub&rsquo;s permission resolution a second time, deliberately, in a separate module with no runtime imports from the agent. If both sides shared one function, a bug in it would make the agent&rsquo;s checks and the ground truth agree with each other while both were wrong &mdash; and the headline number would be measuring nothing but its own reflection.</p>
+  </section>
+
+  <section>
+    <h2>Proving the eval can fail</h2>
+
+    <p class="lede measure">An eval that cannot fail measures nothing. This one reported a silent failure rate of zero for most of the project&rsquo;s life, and that figure was decoration until it was tested.</p>
+
+    <p class="measure">Forcing the headline check to return a clean pass changed nothing. Every scenario still passed and the rate stayed at zero. The recorded plans already closed each inherited path before verify ran, so the check never had anything to catch, and a broken check was indistinguishable from a working one.</p>
+
+    <p class="measure">Two things came out of that. The suite now runs a <strong>naive baseline arm</strong> where the plan leaves inherited grants standing and verify has real work to do. And <span class="mono">npm run eval:mutation</span> disables one safety check at a time and requires the suite to go red.</p>
+
+    <div class="mutants">
+      <div class="mutant"><span class="pill pill-ok">killed</span><span class="mid">gh.no-access</span><span class="mdesc">GitHub effective-access check always passes</span></div>
+      <div class="mutant"><span class="pill pill-ok">killed</span><span class="mid">gh.not-team-member</span><span class="mdesc">GitHub team-membership check always passes</span></div>
+      <div class="mutant"><span class="pill pill-ok">killed</span><span class="mid">drive.no-access</span><span class="mdesc">Drive access check always passes</span></div>
+    </div>
+
+    <div class="callout">
+      <p><strong>It did not start at three of three.</strong></p>
+      <p>The first run killed two, and <span class="mono">gh.not-team-member</span> survived &mdash; which exposed a hole in the product rather than the test. Team membership was only ever discovered by walking repositories and reading their team grants. A team with <em>no</em> repository grants produces no repo-team record, so it was invisible to discovery entirely, and no goal check covered membership.</p>
+      <p style="margin-bottom:0">A departing employee left on a dormant team therefore passed every check. The day someone attaches a repository to that team, a person who left months ago has access again. Fixed across discovery, goals and remediation. Scenario 13 pins it, and the mutant now dies.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Measured</h2>
+
+    <div class="headline">
+      <div class="headline-fig">0.0%</div>
+      <div>
+        <div class="headline-name">Silent failure rate</div>
+        <div class="headline-sub">Runs where the agent claimed success and independent ground truth disagreed. Thirteen frozen scenarios, both planner arms, zero missed.</div>
+      </div>
+    </div>
+
+    <div class="tablewrap" style="margin-top:22px">
+      <table>
+        <thead>
+          <tr><th>Planner arm</th><th>Caught</th><th>Missed</th><th>Blocked</th><th>Cost / run</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">naive-baseline</td><td class="num">37</td><td class="num">0</td><td class="num">5</td><td class="num">&mdash;</td></tr>
+          <tr><td class="mono">claude-sonnet-5</td><td class="num">11</td><td class="num">0</td><td class="num">2</td><td class="num">$0.0338</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="tablewrap" style="margin-top:22px">
+      <table>
+        <tbody>
+          <tr><td>Task success rate</td><td class="num">100.0%</td></tr>
+          <tr><td>Scenarios</td><td class="num">13</td></tr>
+          <tr><td>Mutants killed</td><td class="num">3 / 3</td></tr>
+          <tr><td>Rollback correctness</td><td class="num">1 / 1</td></tr>
+          <tr><td>Live run, wall clock</td><td class="num">~44 s</td></tr>
+          <tr><td>Unit &amp; integration tests</td><td class="num">34 passing</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <p><strong>Caught and blocked are different things, and they used to be added together.</strong></p>
+      <p>A verify failure only counts as a caught lie when the write actually committed and reported success. A check that fails because a human withheld approval is the gate working, not a lie detected &mdash; the write never ran, so nothing claimed anything. Conflating them inflated the headline with the opposite of a failure. They are now separated by requiring a successful commit event for the action before a catch is counted.</p>
+      <p style="margin-bottom:0">The corpus runs against the shadow adapter, so it is deterministic and finishes in milliseconds. Those per-scenario timings are the harness, not the agent, and are deliberately never quoted as latency anywhere in this project. Live wall clock is measured separately, end to end from the trace: 44 seconds and $0.035 for the run quoted at the top of this page.</p>
+    </div>
+
+    <div class="callout">
+      <p><strong>The caught number depends on how good the planner is, and that is the interesting part.</strong></p>
+      <p>The naive baseline catches 37 surviving grants, because a literal-minded plan closes the record it can see and leaves every inherited path standing. <span class="mono">claude-sonnet-5</span> catches 11, because it reads the grant paths in the survey and plans the team removals up front. Both end at zero missed.</p>
+      <p style="margin-bottom:0">Verify is not there because the model is careless. It is there because some failures are structural: <span class="mono">org-base</span> grants have no per-repository action to plan, and the only per-user fix is irreversible and stops for a human. A better planner moves the catches; it does not remove the need for them.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>The scenario corpus</h2>
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Scenario</th><th>What it proves</th><th>Outcome</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="mono">inherited-team-access</td><td>204 while admin persists via <span class="mono">team:payments</span></td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">org-base-permission</td><td>Access with no record to delete</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">drive-link-sharing</td><td><span class="mono">anyone</span> is a separate ACL record</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">commit-timeout-rollback</td><td>No partial state after a mid-commit failure</td><td><span class="pill pill-hold">rolled&#8209;back</span></td></tr>
+          <tr><td class="mono">rate-limited</td><td>429 backs off; never a phantom success</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">stale-cache</td><td>A pre-revocation read fools nobody</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">drive-sole-owner</td><td>Transfer precedes revoke, or the file is orphaned</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">successor-also-departing</td><td>The transfer is refused, not laundered</td><td><span class="pill pill-hold">unresolved</span></td></tr>
+          <tr><td class="mono">irreversible-needs-approval</td><td>Withheld approval means it does not run</td><td><span class="pill pill-hold">unresolved</span></td></tr>
+          <tr><td class="mono">idempotent-replay</td><td>A repeated run writes nothing twice</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">two-surviving-paths</td><td>Closing one inherited path is not enough</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">happy-path</td><td>No false positives when nothing is hidden</td><td><span class="pill pill-ok">verified</span></td></tr>
+          <tr><td class="mono">dormant-team-membership</td><td>A team granting nothing today is a latent grant tomorrow</td><td><span class="pill pill-ok">verified</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="measure" style="margin-top:18px;font-size:14.5px;color:var(--muted)">Two of these outcomes are <span class="mono">unresolved</span> on purpose. A run that refuses an unsafe transfer, or that stops at an approval gate, has not succeeded &mdash; and saying so is the point.</p>
+  </section>
+
+  <section>
+    <h2>Nineteen bugs, found and named</h2>
+    <p class="measure">Four came from the eval and from mutation testing. The rest came from running against real APIs. They are listed because an eval that never fails its own author is decorative.</p>
+
+    <div class="keystone">
+      <div class="bug-t">The one that mattered</div>
+      <div class="bug-d">A plan transferred a sole-owned Drive file to the successor and never removed the departing user&rsquo;s own permission. <strong>Every postcondition passed</strong> &mdash; postconditions verify the actions actually taken, and an action never planned has no postcondition to fail. The agent reported a clean offboarding over a file the departing employee could still open. This is what moved verification from action-based to goal-based.</div>
+    </div>
+
+    <div class="bugs">
+      <div class="bug"><span class="bug-n">01</span><div><div class="bug-t">The eval itself could not fail</div><div class="bug-d">Forcing the headline check to return a clean pass changed nothing: every scenario still passed and the silent failure rate stayed at zero. The recorded plans closed each inherited path before verify ran, so a broken check was indistinguishable from a working one. Fixed with a naive baseline arm and a mutation suite that fails the build if any safety check can be broken unnoticed.</div></div></div>
+      <div class="bug"><span class="bug-n">02</span><div><div class="bug-t">A dormant team membership was invisible to everything</div><div class="bug-d">Team membership was discovered only by walking repositories, so a team with no repository grants was never seen, and no goal check covered membership. A departing employee left on that team passed every check and would regain access the moment the team was given a repository. Found by a surviving mutant.</div></div></div>
+      <div class="bug"><span class="bug-n">03</span><div><div class="bug-t">A team-derived <span class="mono">write</span> grant was invisible to rehearsal</div><div class="bug-d">GitHub returns repo-team permissions in its legacy vocabulary (<code>pull</code>/<code>push</code>) while role names use the modern one (<code>read</code>/<code>write</code>). An un-normalised <code>push</code> fell out of the rank table as <code>undefined</code> and compared as no access at all. The eval never caught it because the eval&rsquo;s &ldquo;live&rdquo; adapter is itself a shadow, so the live adapters had no contract test. They have one now, in both directions &mdash; GitHub also rejects the modern names on writes, so rolling back a removal would have failed too.</div></div></div>
+      <div class="bug"><span class="bug-n">04</span><div><div class="bug-t">A skipped action reported as success</div><div class="bug-d">A precondition correctly refused a transfer and the run still finished <span class="mono">verified</span>. Refusals, failed writes and withheld approvals now all force <span class="mono">unresolved</span>.</div></div></div>
+      <div class="bug"><span class="bug-n">05</span><div><div class="bug-t">An irreversible transfer trusted the model&rsquo;s recipient</div><div class="bug-d">With the successor deliberately misconfigured as the departing employee, the model did not refuse &mdash; it invented a recipient, <code>&lt;UNKNOWN&gt;</code>, and transferred the file there. The distinctness check passed, because <code>&lt;UNKNOWN&gt;</code> genuinely is distinct.</div></div></div>
+      <div class="bug"><span class="bug-n">06</span><div><div class="bug-t">An application-level error recorded as &ldquo;applied&rdquo;</div><div class="bug-d">Slack answers <span class="mono">200 ok:false</span> for application errors, which the adapter maps to a 400. Commit logged the action as applied anyway.</div></div></div>
+      <div class="bug"><span class="bug-n">07</span><div><div class="bug-t">The planner chose the notification channel</div><div class="bug-d">It picked one while configuration pointed elsewhere, and the post failed.</div></div></div>
+      <div class="bug"><span class="bug-n">08</span><div><div class="bug-t">The audit issue was filed at an address the model invented</div><div class="bug-d">On a live run the model filed the Linear audit issue into a team named after the <em>GitHub</em> team slug, which does not exist in Linear. A precondition caught it, so nothing was written to the wrong place, but the run ended unresolved over a detail the model had no way to know. The destination now resolves from configuration or the workspace, and preflight checks it before a run starts.</div></div></div>
+      <div class="bug"><span class="bug-n">09</span><div><div class="bug-t">The seed script claimed &ldquo;invitation sent&rdquo; without checking</div><div class="bug-d">The <span class="mono">PUT</span> 404&rsquo;d on a misspelled username and the script reported success &mdash; in the very script that provisions the demonstration of unchecked writes.</div></div></div>
+      <div class="bug"><span class="bug-n">10</span><div><div class="bug-t">A missing credential crashed instead of degrading</div><div class="bug-d">An empty Drive credential threw inside <span class="mono">JSON.parse</span> before discovery started.</div></div></div>
+      <div class="bug"><span class="bug-n">11</span><div><div class="bug-t">Tool input was assumed to match its schema</div><div class="bug-d"><span class="mono">decisions</span> arrived once as a JSON <em>string</em> rather than an array, and <span class="mono">.filter</span> threw deep inside the planner, costing the run.</div></div></div>
+      <div class="bug"><span class="bug-n">12</span><div><div class="bug-t">Replay protection was dead code that looked alive</div><div class="bug-d">Idempotency keys were stored against <span class="mono">run_id</span> and looked up with <span class="mono">run_id LIKE '%&lt;login&gt;%'</span>. A run id never contains a login, so the query returned zero rows on every live run.</div></div></div>
+      <div class="bug"><span class="bug-n">13</span><div><div class="bug-t">Repository names arrived org-qualified</div><div class="bug-d">The survey prints them qualified, so the model handed them back that way, producing <span class="mono">/repos/org/org%2Frepo/…</span>. Every precondition failed, the revoke never ran, and the run still reported its evaluated postconditions passing.</div></div></div>
+      <div class="bug"><span class="bug-n">14</span><div><div class="bug-t">One trace file held many runs</div><div class="bug-d">The writer opened in append mode while run ids were reused per scenario. The trace viewer and the trace judge then read a stale, self-contradictory history and scored an execution that had not happened.</div></div></div>
+      <div class="bug"><span class="bug-n">15</span><div><div class="bug-t">Redundant verification reads</div><div class="bug-d">One finding reported three times, three API calls billed, because two actions and a goal check all asked the same question.</div></div></div>
+      <div class="bug"><span class="bug-n">16</span><div><div class="bug-t">The eval harness corrupted its own fixture</div><div class="bug-d">The scenario that executes twice to prove replay protection overwrote its recorded plan with the second, empty one.</div></div></div>
+      <div class="bug"><span class="bug-n">17</span><div><div class="bug-t">&ldquo;Could not check&rdquo; was treated as &ldquo;checked and failed&rdquo;</div><div class="bug-d">A Slack token that could post but not read back made the adapter return an empty message list on API error &mdash; quietly turning &ldquo;I could not look&rdquo; into &ldquo;it is not there&rdquo;. Unverifiable is now a third state, distinct from pass and fail.</div></div></div>
+      <div class="bug"><span class="bug-n">18</span><div><div class="bug-t">A failed notification rolled back the whole offboarding</div><div class="bug-d">A Slack post returning 404 would have handed the departing employee their repository access back, in order to fix a reporting problem.</div></div></div>
+      <div class="bug"><span class="bug-n">19</span><div><div class="bug-t">The planner was unreliable two times in five</div><div class="bug-d">It returned a well-written summary with an <em>empty</em> decisions array &mdash; a confident narrative over no plan at all. See below.</div></div></div>
+    </div>
+
+    <div class="callout">
+      <p><strong>The pattern underneath 05, 07, 08, 09 and 13.</strong> Anything that identifies a resource &mdash; a recipient, a channel, a team, a repository &mdash; is configuration or discovery, never a planner decision. The model chooses what to do, not what to do it to.</p>
+      <p style="margin-bottom:0">That rule is worth more than the individual patches it replaced.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Why the planner returns data, not a tool call</h2>
+    <p class="measure">It began as a forced <span class="mono">tool_choice</span> against a <span class="mono">submit_plan</span> tool &mdash; the shape most agent code reaches for. It was measurably unreliable. Reordering the schema helped the symptom and not the cause.</p>
+
+    <div class="wire"><span class="c">measured on one scenario and prompt, first-attempt usable plans</span>
+
+  forced tool call        <span class="bad">3 / 5</span>
+  structured outputs     <span class="ok">11 / 11</span></div>
+
+    <p class="measure">The reason is semantic rather than incidental. Nothing there is a tool: the model is not taking an action, it is returning data. <span class="mono">output_config.format</span> constrains generation to the schema; a forced tool call only hopes the result comes back well-formed. The retry logic remains as a safety net, and no longer fires.</p>
+  </section>
+
+  <section>
+    <h2>Run it</h2>
+    <div class="wire">npm run preflight                              <span class="c"># every row green</span>
+npm run seed:github &amp;&amp; npm run seed:drive      <span class="c"># idempotent fixtures</span>
+npm run offboard -- --mode=live                <span class="c"># the live catch</span>
+npm run eval                                   <span class="c"># 13 scenarios, both arms</span>
+npm run eval:mutation                          <span class="c"># the suite must go red</span>
+npm run dev                                    <span class="c"># the operator console</span></div>
+    <p class="measure" style="font-size:14.5px;color:var(--muted)">The eval replays recorded plans, so the suite is free and instant. <span class="mono">npm run eval -- --live</span> re-plans against the model; the full recording pass costs about $0.44.</p>
+    <a class="repo" href="https://github.com/msehgal001/understudy">github.com/msehgal001/understudy</a>
+  </section>
+
+  <footer>
+    <span>Built in 6.5 hours</span>
+    <span>64 files · ~6,900 lines</span>
+    <span>Next.js · TypeScript · SQLite</span>
+    <span>claude-sonnet-5 planner · claude-opus-5 trace judge</span>
+  </footer>
+
+</div>
+</body>
+</html>

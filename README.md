@@ -1,5 +1,7 @@
 # Understudy
 
+**[Read the system and reliability brief →](https://msehgal001.github.io/understudy/)**
+
 An offboarding agent that removes a departing employee's access across GitHub,
 Google Drive, Linear and Slack — and then independently proves it actually
 happened.

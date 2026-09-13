@@ -358,7 +358,7 @@
 
     <p class="measure">Both calls succeeded. Neither is buggy. The revoke did exactly what it claimed and the access survived anyway, because the agent and the API were answering different questions.</p>
 
-    <p class="measure">This outcome reproduced on all eleven complete live runs recorded in <span class="mono">traces/</span>, without exception. It is the seeded failure the project is built around, and it is deliberately the one no plan can avoid: there is no per-repository action that closes an organisation-wide default.</p>
+    <p class="measure">This outcome reproduced in all eleven complete live runs recorded in <span class="mono">traces/</span>: in every one of them <span class="mono">org-base</span> surfaced as a failing check with access still standing. What differed was only what happened next &mdash; in nine runs the irreversible remediation was approved and organisation membership was actually removed, and in two it was withheld and the run ended <span class="mono">unresolved</span>. Detection never depended on the approval. It is the seeded failure the project is built around, and it is deliberately the one no plan can avoid: there is no per-repository action that closes an organisation-wide default.</p>
   </section>
 
   <section>

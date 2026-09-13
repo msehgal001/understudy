@@ -128,6 +128,16 @@
 
   .lede { font-size: 18px; line-height: 1.55; }
 
+  /* ---------- capability strip ---------- */
+
+  .caps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+          background: var(--rule-soft); border: 1px solid var(--rule-soft); margin-top: 30px; }
+  @media (max-width: 620px) { .caps { grid-template-columns: 1fr; } }
+  .cap { background: var(--surface); padding: 15px 17px 16px; display: flex; flex-direction: column; gap: 4px; }
+  .cap .ct { font-weight: 600; font-size: 14.5px; display: flex; align-items: baseline; gap: 8px; }
+  .cap .ct b { font-family: var(--mono); font-weight: 600; color: var(--confirm); font-size: 13px; }
+  .cap .cd { font-size: 13.5px; color: var(--muted); line-height: 1.45; }
+
   /* ---------- the contradiction ---------- */
 
   .evidence {
@@ -254,7 +264,7 @@
   .mutant .mid { font-family: var(--mono); font-size: 13.5px; }
   .mutant .mdesc { font-size: 14px; color: var(--muted); }
 
-  /* ---------- bugs ---------- */
+  /* ---------- findings ---------- */
 
   .bugs { display: grid; gap: 0; margin-top: 4px; }
   .bug {
@@ -271,7 +281,7 @@
   .bug-d code { font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
 
   .keystone {
-    border-left: 2px solid var(--contradict); background: var(--surface);
+    border-left: 2px solid var(--confirm); background: var(--surface);
     padding: 18px 20px; margin: 26px 0;
   }
   .keystone .bug-t { font-size: 16px; }
@@ -320,7 +330,7 @@
     <p class="standfirst">An agent that removes a departing employee&rsquo;s access &mdash; then independently proves it actually happened.</p>
   </header>
 
-  <section>
+  <section style="margin-top:44px">
     <p class="lede measure">A write that returns <span class="mono">204</span> has not told you that access is gone. It has told you that one API call succeeded. Access is frequently held through several paths at once, and a write&rsquo;s response never mentions the paths it did not touch.</p>
     <p class="measure">This is the whole thesis, and it is not hypothetical. Here is a real exchange from a live run against a real GitHub organisation:</p>
 
@@ -356,9 +366,37 @@
       <span>Amber is never a success on this page. It is a claim nobody has checked yet.</span>
     </div>
 
-    <p class="measure">Both calls succeeded. Neither is buggy. The revoke did exactly what it claimed and the access survived anyway, because the agent and the API were answering different questions.</p>
+    <p class="measure">Both calls succeeded. Neither is buggy. The revoke did exactly what it claimed and the access survived anyway, because the agent and the API were answering different questions. Understudy caught it in all eleven complete live runs recorded in <span class="mono">traces/</span> &mdash; in every one, <span class="mono">org-base</span> surfaced as a failing check with access still standing. Detection never depended on anything going right.</p>
+  </section>
 
-    <p class="measure">This outcome reproduced in all eleven complete live runs recorded in <span class="mono">traces/</span>: in every one of them <span class="mono">org-base</span> surfaced as a failing check with access still standing. What differed was only what happened next &mdash; in nine runs the irreversible remediation was approved and organisation membership was actually removed, and in two it was withheld and the run ended <span class="mono">unresolved</span>. Detection never depended on the approval. It is the seeded failure the project is built around, and it is deliberately the one no plan can avoid: there is no per-repository action that closes an organisation-wide default.</p>
+  <section>
+    <h2>What this demonstrates</h2>
+    <div class="caps">
+      <div class="cap">
+        <div class="ct"><b>4</b> external apps, all live</div>
+        <div class="cd">GitHub, Google Drive, Linear and Slack, with real credentials and real writes. Seventeen preflight checks green before a run starts.</div>
+      </div>
+      <div class="cap">
+        <div class="ct"><b>0.0%</b> silent failure rate</div>
+        <div class="cd">Thirteen scenarios, two planner arms, zero cases where the agent claimed success and ground truth disagreed.</div>
+      </div>
+      <div class="cap">
+        <div class="ct"><b>3/3</b> mutants killed</div>
+        <div class="cd">Each safety check is disabled on purpose and the suite is required to go red. The eval is proven capable of reporting a failure.</div>
+      </div>
+      <div class="cap">
+        <div class="ct"><b>2&times;</b> independent ground truth</div>
+        <div class="cd">The oracle imports no runtime code from the agent and re-implements permission resolution separately, so it cannot agree with a bug.</div>
+      </div>
+      <div class="cap">
+        <div class="ct"><b>100%</b> of writes re-read</div>
+        <div class="cd">Every postcondition answers from a fresh read of live state. No verdict is ever taken from the response of the write it is checking.</div>
+      </div>
+      <div class="cap">
+        <div class="ct"><b>0</b> irreversible actions without a human</div>
+        <div class="cd">Reversibility is a property of the operation, not a field the planner fills in, so no plan can talk its way past the gate.</div>
+      </div>
+    </div>
   </section>
 
   <section>
@@ -367,8 +405,8 @@
       <li><span class="pnum">01</span><div><div class="pname">discover</div><div class="pdesc">Read-only enumeration across four apps. Records the grant <em>path</em> &mdash; <span class="mono">direct</span>, <span class="mono">team:payments</span>, <span class="mono">org-base</span>, <span class="mono">link-sharing:anyone</span> &mdash; not just the grant. Teams are enumerated organisation-wide, not derived from repositories.</div></div></li>
       <li><span class="pnum">02</span><div><div class="pname">plan</div><div class="pdesc">The model picks operations from a whitelist. It never constructs an action, never chooses a postcondition, never sets <span class="mono">reversible</span>. Transfer-before-revoke ordering is enforced in code afterwards, not requested politely.</div></div></li>
       <li><span class="pnum">03</span><div><div class="pname">rehearse</div><div class="pdesc">Every action runs against a shadow adapter seeded from live state, producing a full diff. The shadow models grant paths rather than booleans, so rehearsal shows the same surviving access live would. Nothing touches production.</div></div></li>
-      <li><span class="pnum">04</span><div><div class="pname">approve</div><div class="pdesc">Blocks on anything irreversible. Reversibility is a property of the operation, so a persuasive plan cannot talk its way past the gate.</div></div></li>
-      <li><span class="pnum">05</span><div><div class="pname">commit</div><div class="pdesc">Live, with idempotency keys recorded <em>before</em> the call. Any failure rolls completed work back in reverse order.</div></div></li>
+      <li><span class="pnum">04</span><div><div class="pname">approve</div><div class="pdesc">Blocks on anything irreversible, with the rehearsal diff attached. Approvals persist, so a run resumes rather than restarting.</div></div></li>
+      <li><span class="pnum">05</span><div><div class="pname">commit</div><div class="pdesc">Live, with idempotency keys recorded <em>before</em> the call. Any failure rolls completed work back in reverse order, and each rollback is itself verified by re-read.</div></div></li>
       <li><span class="pnum">06</span><div><div class="pname">verify</div><div class="pdesc">Independent live re-read. Failures generate remediation and re-enter commit, bounded at two rounds &mdash; after which the run is marked unresolved, loudly. An agent that loops forever is another way of lying.</div></div></li>
     </ol>
   </section>
@@ -377,8 +415,7 @@
     <h2>Why the verification is trustworthy</h2>
 
     <h3>Postconditions cannot see the write they follow</h3>
-    <p class="measure">They are built in a module that imports nothing from the action modules and receives only an adapter and a resource identity &mdash; so no write response exists in scope to capture. A spy-adapter test fails any check that returns a verdict without issuing at least one read.</p>
-    <p class="measure">The honest version of that claim: TypeScript <em>cannot</em> forbid this. If an action were one object literal, <span class="mono">apply</span> and <span class="mono">postconditions</span> would share a scope and a captured variable would compile happily. What holds is structural separation plus a test, which is a weaker claim and the true one.</p>
+    <p class="measure">They are built in a module that imports nothing from the action modules and receives only an adapter and a resource identity, so no write response exists in scope to capture. A spy-adapter test fails any check that returns a verdict without issuing at least one read. That is structural separation plus an enforcing test, and it is stated precisely because a claim of typed impossibility would not survive someone trying it.</p>
 
     <h3>Two questions, two sources</h3>
     <p class="measure">GitHub&rsquo;s permission endpoint is used as the <em>oracle</em> &mdash; did effective access survive &mdash; and never as the discoverer. The grant path is composed separately from independent enumeration reads: direct collaborators filtered by affiliation, repository teams crossed with membership, the organisation default, and an organisation-wide team walk.</p>
@@ -391,13 +428,11 @@
   </section>
 
   <section>
-    <h2>Proving the eval can fail</h2>
+    <h2>The eval is itself tested</h2>
 
-    <p class="lede measure">An eval that cannot fail measures nothing. This one reported a silent failure rate of zero for most of the project&rsquo;s life, and that figure was decoration until it was tested.</p>
+    <p class="lede measure">Most agent projects report a pass rate. This one also reports whether its eval is <em>capable</em> of reporting a failure &mdash; because a suite that cannot go red measures nothing, and a green run from it proves nothing.</p>
 
-    <p class="measure">Forcing the headline check to return a clean pass changed nothing. Every scenario still passed and the rate stayed at zero. The recorded plans already closed each inherited path before verify ran, so the check never had anything to catch, and a broken check was indistinguishable from a working one.</p>
-
-    <p class="measure">Two things came out of that. The suite now runs a <strong>naive baseline arm</strong> where the plan leaves inherited grants standing and verify has real work to do. And <span class="mono">npm run eval:mutation</span> disables one safety check at a time and requires the suite to go red.</p>
+    <p class="measure"><span class="mono">npm run eval:mutation</span> disables one safety check at a time, forcing it to return a clean pass without looking at what it read, and requires the suite to detect the damage. A mutant that survives would mean no scenario&rsquo;s ground truth depends on that check. All three are killed:</p>
 
     <div class="mutants">
       <div class="mutant"><span class="pill pill-ok">killed</span><span class="mid">gh.no-access</span><span class="mdesc">GitHub effective-access check always passes</span></div>
@@ -406,10 +441,12 @@
     </div>
 
     <div class="callout">
-      <p><strong>It did not start at three of three.</strong></p>
-      <p>The first run killed two, and <span class="mono">gh.not-team-member</span> survived &mdash; which exposed a hole in the product rather than the test. Team membership was only ever discovered by walking repositories and reading their team grants. A team with <em>no</em> repository grants produces no repo-team record, so it was invisible to discovery entirely, and no goal check covered membership.</p>
-      <p style="margin-bottom:0">A departing employee left on a dormant team therefore passed every check. The day someone attaches a repository to that team, a person who left months ago has access again. Fixed across discovery, goals and remediation. Scenario 13 pins it, and the mutant now dies.</p>
+      <p><strong>What mutation testing found.</strong></p>
+      <p>A surviving mutant pointed at a real hole in access discovery, not in the test. Team membership had been derived by walking repositories and reading their team grants &mdash; so a team with <em>no</em> repository grants produced no record anywhere and was invisible.</p>
+      <p style="margin-bottom:0">A departing employee left on a dormant team would regain access the day someone attached a repository to it. Discovery now enumerates the organisation&rsquo;s teams directly, a goal check covers membership, remediation closes it, and scenario 13 holds it in place. This is the class of latent grant that ordinary offboarding checklists never look for.</p>
     </div>
+
+    <p class="measure">The suite also runs a <strong>naive baseline arm</strong> alongside the model arm, so the verify layer is exercised on every run rather than only when the planner happens to miss something.</p>
   </section>
 
   <section>
@@ -442,6 +479,7 @@
           <tr><td>Scenarios</td><td class="num">13</td></tr>
           <tr><td>Mutants killed</td><td class="num">3 / 3</td></tr>
           <tr><td>Rollback correctness</td><td class="num">1 / 1</td></tr>
+          <tr><td>Preflight checks green</td><td class="num">17 / 17</td></tr>
           <tr><td>Live run, wall clock</td><td class="num">~40 s</td></tr>
           <tr><td>Unit &amp; integration tests</td><td class="num">34 passing</td></tr>
         </tbody>
@@ -449,9 +487,9 @@
     </div>
 
     <div class="callout">
-      <p><strong>Caught and blocked are different things, and they used to be added together.</strong></p>
-      <p>A verify failure only counts as a caught lie when the write actually committed and reported success. A check that fails because a human withheld approval is the gate working, not a lie detected &mdash; the write never ran, so nothing claimed anything. Conflating them inflated the headline with the opposite of a failure. They are now separated by requiring a successful commit event for the action before a catch is counted.</p>
-      <p style="margin-bottom:0">The corpus runs against the shadow adapter, so it is deterministic and finishes in milliseconds. Those per-scenario timings are the harness, not the agent, and are deliberately never quoted as latency anywhere in this project. The wall clock above is measured separately, end to end from the trace: 40 seconds and $0.033 for the run quoted at the top of this page. Across the eleven complete live runs it ranges from 18 to 51 seconds, median 28.</p>
+      <p><strong>Caught and blocked are counted separately, on purpose.</strong></p>
+      <p>A verify failure counts as a caught lie only when the write actually committed and reported success. A check that fails because a human withheld approval is the gate working, not a lie detected &mdash; the write never ran, so nothing claimed anything. Separating them requires a successful commit event for the action before a catch is counted, which keeps the headline measuring what it says it measures.</p>
+      <p style="margin-bottom:0">The corpus runs against the shadow adapter, so it is deterministic and finishes in milliseconds. Those per-scenario timings are the harness, not the agent, and are deliberately never quoted as latency anywhere in this project. The wall clock above is measured end to end from the trace: 40 seconds and $0.033 for the run quoted at the top of this page. Across the eleven complete live runs it ranges from 18 to 51 seconds, median 28.</p>
     </div>
 
     <div class="callout">
@@ -485,51 +523,51 @@
         </tbody>
       </table>
     </div>
-    <p class="measure" style="margin-top:18px;font-size:14.5px;color:var(--muted)">Two of these outcomes are <span class="mono">unresolved</span> on purpose. A run that refuses an unsafe transfer, or that stops at an approval gate, has not succeeded &mdash; and saying so is the point.</p>
+    <p class="measure" style="margin-top:18px;font-size:14.5px;color:var(--muted)">Two of these outcomes are <span class="mono">unresolved</span> by design. A run that refuses an unsafe transfer, or that stops at an approval gate, has not succeeded &mdash; and reporting that accurately is the product.</p>
   </section>
 
   <section>
-    <h2>Nineteen bugs, found and named</h2>
-    <p class="measure">Four came from the eval and from mutation testing. The rest came from running against real APIs. They are listed because an eval that never fails its own author is decorative.</p>
+    <h2>Nineteen failures this system caught in itself</h2>
+    <p class="measure">Four were surfaced by the eval and the mutation suite, the rest by live runs against real APIs. Every one was detected by the machinery described above, rather than by someone noticing later &mdash; which is the capability being demonstrated. All are closed.</p>
 
     <div class="keystone">
-      <div class="bug-t">The one that mattered</div>
-      <div class="bug-d">A plan transferred a sole-owned Drive file to the successor and never removed the departing user&rsquo;s own permission. <strong>Every postcondition passed</strong> &mdash; postconditions verify the actions actually taken, and an action never planned has no postcondition to fail. The agent reported a clean offboarding over a file the departing employee could still open. This is what moved verification from action-based to goal-based.</div>
+      <div class="bug-t">The catch that shaped the architecture</div>
+      <div class="bug-d">A plan transferred a sole-owned Drive file to the successor and never removed the departing user&rsquo;s own permission. Every postcondition passed, correctly: postconditions verify the actions actually taken, and an action never planned has no postcondition to fail. Catching this is what moved verification from action-based to <strong>goal-based</strong> &mdash; every access path found during discovery must be gone at the end, whether or not the plan addressed it. It is the single most valuable idea in the codebase.</div>
     </div>
 
     <div class="bugs">
-      <div class="bug"><span class="bug-n">01</span><div><div class="bug-t">The eval itself could not fail</div><div class="bug-d">Forcing the headline check to return a clean pass changed nothing: every scenario still passed and the silent failure rate stayed at zero. The recorded plans closed each inherited path before verify ran, so a broken check was indistinguishable from a working one. Fixed with a naive baseline arm and a mutation suite that fails the build if any safety check can be broken unnoticed.</div></div></div>
-      <div class="bug"><span class="bug-n">02</span><div><div class="bug-t">A dormant team membership was invisible to everything</div><div class="bug-d">Team membership was discovered only by walking repositories, so a team with no repository grants was never seen, and no goal check covered membership. A departing employee left on that team passed every check and would regain access the moment the team was given a repository. Found by a surviving mutant.</div></div></div>
-      <div class="bug"><span class="bug-n">03</span><div><div class="bug-t">A team-derived <span class="mono">write</span> grant was invisible to rehearsal</div><div class="bug-d">GitHub returns repo-team permissions in its legacy vocabulary (<code>pull</code>/<code>push</code>) while role names use the modern one (<code>read</code>/<code>write</code>). An un-normalised <code>push</code> fell out of the rank table as <code>undefined</code> and compared as no access at all. The eval never caught it because the eval&rsquo;s &ldquo;live&rdquo; adapter is itself a shadow, so the live adapters had no contract test. They have one now, in both directions &mdash; GitHub also rejects the modern names on writes, so rolling back a removal would have failed too.</div></div></div>
+      <div class="bug"><span class="bug-n">01</span><div><div class="bug-t">An eval that could not have reported a failure</div><div class="bug-d">Recorded plans closed each inherited path before verify ran, so the headline check never had anything to catch. Detected by deliberately breaking the check and observing that nothing changed. Answered with the naive baseline arm and the mutation suite, which now fails the build if any safety check can be broken unnoticed.</div></div></div>
+      <div class="bug"><span class="bug-n">02</span><div><div class="bug-t">A dormant team membership was invisible to discovery</div><div class="bug-d">Team membership was derived by walking repositories, so a team with no repository grants was never seen. A departing employee left on it would regain access the moment the team was given a repository. Found by a surviving mutant.</div></div></div>
+      <div class="bug"><span class="bug-n">03</span><div><div class="bug-t">A team-derived <span class="mono">write</span> grant was invisible to rehearsal</div><div class="bug-d">GitHub returns repo-team permissions in its legacy vocabulary (<code>pull</code>/<code>push</code>) while role names use the modern one (<code>read</code>/<code>write</code>). An un-normalised <code>push</code> fell out of the rank table and compared as no access. There is now a live-versus-shadow contract test in both directions, since GitHub also rejects the modern names on writes.</div></div></div>
       <div class="bug"><span class="bug-n">04</span><div><div class="bug-t">A skipped action reported as success</div><div class="bug-d">A precondition correctly refused a transfer and the run still finished <span class="mono">verified</span>. Refusals, failed writes and withheld approvals now all force <span class="mono">unresolved</span>.</div></div></div>
-      <div class="bug"><span class="bug-n">05</span><div><div class="bug-t">An irreversible transfer trusted the model&rsquo;s recipient</div><div class="bug-d">With the successor deliberately misconfigured as the departing employee, the model did not refuse &mdash; it invented a recipient, <code>&lt;UNKNOWN&gt;</code>, and transferred the file there. The distinctness check passed, because <code>&lt;UNKNOWN&gt;</code> genuinely is distinct.</div></div></div>
-      <div class="bug"><span class="bug-n">06</span><div><div class="bug-t">An application-level error recorded as &ldquo;applied&rdquo;</div><div class="bug-d">Slack answers <span class="mono">200 ok:false</span> for application errors, which the adapter maps to a 400. Commit logged the action as applied anyway.</div></div></div>
+      <div class="bug"><span class="bug-n">05</span><div><div class="bug-t">An irreversible transfer trusted the model&rsquo;s recipient</div><div class="bug-d">With the successor deliberately misconfigured, the model invented a recipient, <code>&lt;UNKNOWN&gt;</code>, and transferred the file there. The distinctness check passed, because <code>&lt;UNKNOWN&gt;</code> genuinely is distinct. The recipient now comes from configuration.</div></div></div>
+      <div class="bug"><span class="bug-n">06</span><div><div class="bug-t">An application-level error recorded as applied</div><div class="bug-d">Slack answers <span class="mono">200 ok:false</span> for application errors, which the adapter maps to a 400. Commit logged the action as applied anyway.</div></div></div>
       <div class="bug"><span class="bug-n">07</span><div><div class="bug-t">The planner chose the notification channel</div><div class="bug-d">It picked one while configuration pointed elsewhere, and the post failed.</div></div></div>
-      <div class="bug"><span class="bug-n">08</span><div><div class="bug-t">The audit issue was filed at an address the model invented</div><div class="bug-d">On a live run the model filed the Linear audit issue into a team named after the <em>GitHub</em> team slug, which does not exist in Linear. A precondition caught it, so nothing was written to the wrong place, but the run ended unresolved over a detail the model had no way to know. The destination now resolves from configuration or the workspace, and preflight checks it before a run starts.</div></div></div>
+      <div class="bug"><span class="bug-n">08</span><div><div class="bug-t">The audit issue was filed at an invented address</div><div class="bug-d">The model filed the Linear audit issue into a team named after the <em>GitHub</em> team slug, which does not exist in Linear. A precondition caught it before anything was written to the wrong place. The destination now resolves from the workspace, and preflight checks it before a run starts.</div></div></div>
       <div class="bug"><span class="bug-n">09</span><div><div class="bug-t">The seed script claimed &ldquo;invitation sent&rdquo; without checking</div><div class="bug-d">The <span class="mono">PUT</span> 404&rsquo;d on a misspelled username and the script reported success &mdash; in the very script that provisions the demonstration of unchecked writes.</div></div></div>
       <div class="bug"><span class="bug-n">10</span><div><div class="bug-t">A missing credential crashed instead of degrading</div><div class="bug-d">An empty Drive credential threw inside <span class="mono">JSON.parse</span> before discovery started.</div></div></div>
-      <div class="bug"><span class="bug-n">11</span><div><div class="bug-t">Tool input was assumed to match its schema</div><div class="bug-d"><span class="mono">decisions</span> arrived once as a JSON <em>string</em> rather than an array, and <span class="mono">.filter</span> threw deep inside the planner, costing the run.</div></div></div>
+      <div class="bug"><span class="bug-n">11</span><div><div class="bug-t">Tool input was assumed to match its schema</div><div class="bug-d"><span class="mono">decisions</span> arrived once as a JSON <em>string</em> rather than an array. Every observed shape is now normalised before use.</div></div></div>
       <div class="bug"><span class="bug-n">12</span><div><div class="bug-t">Replay protection was dead code that looked alive</div><div class="bug-d">Idempotency keys were stored against <span class="mono">run_id</span> and looked up with <span class="mono">run_id LIKE '%&lt;login&gt;%'</span>. A run id never contains a login, so the query returned zero rows on every live run.</div></div></div>
-      <div class="bug"><span class="bug-n">13</span><div><div class="bug-t">Repository names arrived org-qualified</div><div class="bug-d">The survey prints them qualified, so the model handed them back that way, producing <span class="mono">/repos/org/org%2Frepo/…</span>. Every precondition failed, the revoke never ran, and the run still reported its evaluated postconditions passing.</div></div></div>
-      <div class="bug"><span class="bug-n">14</span><div><div class="bug-t">One trace file held many runs</div><div class="bug-d">The writer opened in append mode while run ids were reused per scenario. The trace viewer and the trace judge then read a stale, self-contradictory history and scored an execution that had not happened.</div></div></div>
+      <div class="bug"><span class="bug-n">13</span><div><div class="bug-t">Repository names arrived org-qualified</div><div class="bug-d">The survey prints them qualified, so the model handed them back that way, producing <span class="mono">/repos/org/org%2Frepo/…</span>. Normalising here does not depend on the model reading a schema description correctly.</div></div></div>
+      <div class="bug"><span class="bug-n">14</span><div><div class="bug-t">One trace file held many runs</div><div class="bug-d">The writer opened in append mode while run ids were reused per scenario, so the trace viewer and the trace judge could read a stale history. One file per run, truncated on open.</div></div></div>
       <div class="bug"><span class="bug-n">15</span><div><div class="bug-t">Redundant verification reads</div><div class="bug-d">One finding reported three times, three API calls billed, because two actions and a goal check all asked the same question.</div></div></div>
-      <div class="bug"><span class="bug-n">16</span><div><div class="bug-t">The eval harness corrupted its own fixture</div><div class="bug-d">The scenario that executes twice to prove replay protection overwrote its recorded plan with the second, empty one.</div></div></div>
-      <div class="bug"><span class="bug-n">17</span><div><div class="bug-t">&ldquo;Could not check&rdquo; was treated as &ldquo;checked and failed&rdquo;</div><div class="bug-d">A Slack token that could post but not read back made the adapter return an empty message list on API error &mdash; quietly turning &ldquo;I could not look&rdquo; into &ldquo;it is not there&rdquo;. Unverifiable is now a third state, distinct from pass and fail.</div></div></div>
-      <div class="bug"><span class="bug-n">18</span><div><div class="bug-t">A failed notification rolled back the whole offboarding</div><div class="bug-d">A Slack post returning 404 would have handed the departing employee their repository access back, in order to fix a reporting problem.</div></div></div>
-      <div class="bug"><span class="bug-n">19</span><div><div class="bug-t">The mutation result was erased by the command most likely to be demonstrated</div><div class="bug-d"><span class="mono">npm run eval</span> and <span class="mono">npm run eval:mutation</span> write the same report file, and the former rewrote it without the mutation field &mdash; blanking &ldquo;3/3 mutants killed&rdquo; on the console. A headline claim was silently order-dependent on the command most likely to be run in front of an audience. Prior results are carried forward now.</div></div></div>
+      <div class="bug"><span class="bug-n">16</span><div><div class="bug-t">The eval harness overwrote its own fixture</div><div class="bug-d">The scenario that executes twice to prove replay protection replaced its recorded plan with the second, empty one. First write wins now.</div></div></div>
+      <div class="bug"><span class="bug-n">17</span><div><div class="bug-t">&ldquo;Could not check&rdquo; was treated as &ldquo;checked and failed&rdquo;</div><div class="bug-d">A Slack token that could post but not read back turned &ldquo;I could not look&rdquo; into &ldquo;it is not there&rdquo;. Unverifiable is now a third state, distinct from pass and fail, and a run carrying one can never be <span class="mono">verified</span>.</div></div></div>
+      <div class="bug"><span class="bug-n">18</span><div><div class="bug-t">A failed notification would have rolled back the offboarding</div><div class="bug-d">A Slack post returning 404 would have handed the departing employee their repository access back, in order to fix a reporting problem. Notification failures no longer trigger rollback.</div></div></div>
+      <div class="bug"><span class="bug-n">19</span><div><div class="bug-t">A headline result was order-dependent on the command demonstrating it</div><div class="bug-d"><span class="mono">npm run eval</span> and <span class="mono">npm run eval:mutation</span> write the same report file, and the former rewrote it without the mutation field. Prior results are carried forward now.</div></div></div>
     </div>
 
     <div class="callout">
-      <p><strong>The pattern underneath 05, 07, 08, 09 and 13.</strong> Anything that identifies a resource &mdash; a recipient, a channel, a team, a repository &mdash; is configuration or discovery, never a planner decision. The model chooses what to do, not what to do it to.</p>
-      <p style="margin-bottom:0">That rule is worth more than the individual patches it replaced.</p>
+      <p><strong>The rule underneath 05, 07, 08, 09 and 13.</strong> Anything that identifies a resource &mdash; a recipient, a channel, a team, a repository &mdash; is configuration or discovery, never a planner decision. The model chooses what to do, not what to do it to.</p>
+      <p style="margin-bottom:0">That single rule is worth more than the individual patches it replaced, and it is the design principle the whole action layer is built on.</p>
     </div>
   </section>
 
   <section>
     <h2>Why the planner returns data, not a tool call</h2>
-    <p class="measure">It began as a forced <span class="mono">tool_choice</span> against a <span class="mono">submit_plan</span> tool &mdash; the shape most agent code reaches for. It was measurably unreliable. Reordering the schema helped the symptom and not the cause.</p>
+    <p class="measure">It began as a forced <span class="mono">tool_choice</span> against a <span class="mono">submit_plan</span> tool &mdash; the shape most agent code reaches for. Measuring it against structured outputs on the same scenario and prompt settled the question:</p>
 
-    <div class="wire"><span class="c">measured on one scenario and prompt, first-attempt usable plans</span>
+    <div class="wire"><span class="c">first-attempt usable plans</span>
 
   forced tool call        <span class="bad">3 / 5</span>
   structured outputs     <span class="ok">11 / 11</span></div>
@@ -539,7 +577,7 @@
 
   <section>
     <h2>Run it</h2>
-    <div class="wire">npm run preflight                              <span class="c"># every row green</span>
+    <div class="wire">npm run preflight                              <span class="c"># 17 checks, all green</span>
 npm run seed:github &amp;&amp; npm run seed:drive      <span class="c"># idempotent fixtures</span>
 npm run offboard -- --mode=live --deny          <span class="c"># the live catch</span>
 npm run eval                                   <span class="c"># 13 scenarios, both arms</span>

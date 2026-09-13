@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T21:31:18.826Z",
+  "generatedAt": "2026-09-13T21:50:04.501Z",
   "mode": "replay",
   "plannerModel": "naive-baseline",
   "metrics": {
@@ -176,7 +176,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 0,
+      "durationMs": 1,
       "costUsd": 0,
       "oracle": [
         {
@@ -203,7 +203,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 0,
+      "durationMs": 1,
       "costUsd": 0,
       "oracle": [
         {
@@ -238,7 +238,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 0,
+      "durationMs": 1,
       "costUsd": 0,
       "oracle": [
         {
@@ -360,7 +360,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 0,
       "rollbackCorrect": null,
-      "durationMs": 1,
+      "durationMs": 0,
       "costUsd": 0,
       "oracle": [
         {

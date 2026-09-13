@@ -27,6 +27,11 @@ export class LiveLinearAdapter implements LinearAdapter {
     return nodes[0] ?? null;
   }
 
+  async listTeams() {
+    const { data } = await this.gql(`query { teams(first: 50) { nodes { id key name } } }`);
+    return (data.teams as { nodes: { id: string; key: string; name: string }[] })?.nodes ?? [];
+  }
+
   async listAssignedIssues(userId: string) {
     const { data } = await this.gql(
       `query($f: IssueFilter) { issues(filter: $f, first: 100) {

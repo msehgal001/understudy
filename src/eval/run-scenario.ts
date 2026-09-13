@@ -20,6 +20,8 @@ export type ScenarioRun = {
   silentFailure: boolean;
   /** Postconditions that failed during verify — access the system caught itself. */
   caughtInVerify: number;
+  blockedByDesign: number;
+  verifyFailures: number;
   taskSuccess: boolean;
   rollbackCorrect: boolean | null;
   durationMs: number;
@@ -88,9 +90,29 @@ export async function runScenario(
   const groundTruthOk = oracle.every((o) => o.pass);
   const claimedSuccess = result.status === "verified";
 
-  const caughtInVerify = tracer.events.filter(
+  // A failing verify postcondition is not automatically a caught lie. When the
+  // human withheld approval, the action never ran, so access surviving is the
+  // system obeying the gate — counting that as a "silent failure caught" inflates
+  // the headline with the opposite of a failure. A lie requires a write that
+  // reported success and state that disagrees, so the action must have committed.
+  const committedOk = new Set(
+    tracer.events
+      .filter((e) => e.type === "action" && e.phase === "commit" && e.ok === true && e.label.startsWith("commit:applied"))
+      .map((e) => e.actionId)
+      .filter((id): id is string => !!id),
+  );
+  const approvalWithheld = result.approvals.required.length > result.approvals.granted.length;
+
+  const verifyFailures = tracer.events.filter(
     (e) => e.type === "postcondition" && e.phase === "verify" && e.ok === false,
+  );
+  // Goal-level checks are not tied to one action, so they only count as a caught
+  // lie in a run where nothing was blocked by a withheld approval.
+  const silentFailuresCaught = verifyFailures.filter((e) =>
+    e.actionId && e.actionId !== "goal" ? committedOk.has(e.actionId) : !approvalWithheld,
   ).length;
+  const blockedByDesign = verifyFailures.length - silentFailuresCaught;
+  const caughtInVerify = silentFailuresCaught;
 
   const statusAsExpected = s.expected.expectRollback
     ? result.status === "rolled-back"
@@ -108,7 +130,8 @@ export async function runScenario(
     scenario: s, result, oracle, initialWorld, finalWorld: liveWorld,
     claimedSuccess, groundTruthOk,
     silentFailure: claimedSuccess && !groundTruthOk,
-    caughtInVerify, taskSuccess, rollbackCorrect,
+    caughtInVerify, blockedByDesign, verifyFailures: verifyFailures.length,
+    taskSuccess, rollbackCorrect,
     durationMs: result.durationMs, costUsd: result.costUsd,
     tracePath: opts.traceDir ? `${opts.traceDir}/${runId}.jsonl` : null,
   };

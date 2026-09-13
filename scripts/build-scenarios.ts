@@ -269,7 +269,7 @@ scenarios.push(scenario({
   scenarios.push(scenario({
     id: "12-happy-path",
     title: "A plain revoke with no inherited paths",
-    proves: "No false positives. When there is nothing hidden, verify passes first time and no remediation runs.",
+    proves: "No false positives on GitHub. With no team, org-base or link-sharing path hidden behind the obvious grants, the naive plan verifies first time and no GitHub remediation runs.",
     world: w,
     approve: "all",
     expected: { assertions: [{ type: "github-no-access", repo: "docs-site", login: DEP.login }] },
@@ -277,6 +277,29 @@ scenarios.push(scenario({
 }
 
 const dir = path.join(process.cwd(), "src/eval/scenarios");
+// 13 — dormant team membership, reachable only by the team check
+{
+  const w = clean();
+  // A team with NO entry in teamRepos. Effective repo permission stays "none",
+  // so the effective-access check passes and never looks here. Only the team
+  // membership goal check can see it.
+  w.github.teams.push({ slug: "security-oncall", id: 3, name: "Security Oncall" });
+  w.github.teamMembers.push({ slug: "security-oncall", login: DEP.login, role: "member" });
+  scenarios.push(scenario({
+    id: "13-dormant-team-membership",
+    title: "A team membership that grants nothing today",
+    proves: "A team with no repository grants is invisible to every access check, because there is no access to find. The membership is still a latent grant: attach a repo to that team later and a departed employee has it back. Only the team-membership goal check closes this.",
+    world: w,
+    approve: "all",
+    expected: {
+      assertions: [
+        { type: "github-not-team-member", slug: "security-oncall", login: DEP.login },
+        { type: "github-no-access", repo: "payments-core", login: DEP.login },
+      ],
+    },
+  }));
+}
+
 fs.mkdirSync(dir, { recursive: true });
 for (const s of scenarios) {
   fs.writeFileSync(path.join(dir, `${s.id}.json`), JSON.stringify(s, null, 2) + "\n");

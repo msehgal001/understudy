@@ -47,3 +47,6 @@ google-oauth.json
 # and the database holds run history. Both are reproducible by running the tool.
 traces/
 data/
+
+# judges need the config template; .env* above would otherwise swallow it
+!.env.example

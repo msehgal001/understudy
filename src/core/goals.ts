@@ -29,6 +29,19 @@ export function goalChecks(d: Discovery): Check[] {
     checks.push(post.githubNoEffectiveAccess({ org: d.org, repo, login: d.target.githubLogin }));
   }
 
+  // A team the departing employee is still on but which grants no repository
+  // access TODAY is invisible to every check above: effective permission reads
+  // "none", so nothing flags it. It is a latent grant. The day someone gives that
+  // team a repo, access silently returns for a person who left months ago. Found
+  // by mutation testing — see src/eval/mutate.ts — when disabling the team check
+  // changed no result, which meant nothing depended on it.
+  for (const slug of d.github.teams) {
+    const key = `ghteam:${slug}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    checks.push(post.githubNotTeamMember({ org: d.org, slug, login: d.target.githubLogin }));
+  }
+
   for (const f of d.drive.files) {
     const hadPermission = f.permissions.some((p) => p.emailAddress === d.target.email);
     if (!hadPermission && !f.departingIsOwner) continue;

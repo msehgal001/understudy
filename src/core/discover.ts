@@ -86,6 +86,20 @@ export async function discover(adapters: AdapterSet, target: OffboardTarget, org
     }
   }
 
+  // Teams reached above came from repositories. A team with no repository grants
+  // has no repo-team record anywhere, so it is invisible to that walk while still
+  // being a real membership. Enumerate the org's teams directly and close the gap.
+  if (membership.state === "active") {
+    const orgTeams = await tracer.span({ type: "tool", phase: "discover", label: "github.listOrgTeams" }, () =>
+      gh.listOrgTeams(org),
+    );
+    for (const t of orgTeams) {
+      if (teamsWithUser.has(t.slug)) continue;
+      const members = await gh.listTeamMembers(org, t.slug);
+      if (members.some((m) => m.login === target.githubLogin)) teamsWithUser.add(t.slug);
+    }
+  }
+
   tracer.emit({
     type: "note", phase: "discover", label: "github.grants",
     detail: { count: grants.length, paths: grants.map((g) => g.path.kind) },

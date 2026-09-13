@@ -72,6 +72,11 @@ export class ShadowGithubAdapter implements GithubAdapter {
    * Highest role across direct, team and org-base — GitHub's documented resolution.
    * Independently re-implemented in src/eval/oracle.ts; see the note in core/world.ts.
    */
+  async listOrgTeams(_org: string) {
+    const w = this.read("github.listOrgTeams").github;
+    return w.teams.map((t) => ({ slug: t.slug, name: t.name }));
+  }
+
   async getEffectivePermission(_org: string, repo: string, login: string) {
     const w = this.read("github.getEffectivePermission").github;
     const member = w.orgMembers.find((o) => o.login === login && o.state === "active");

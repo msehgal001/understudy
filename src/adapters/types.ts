@@ -20,6 +20,12 @@ export interface GithubAdapter {
   listOrgRepos(org: string): Promise<{ name: string; archived: boolean }[]>;
   listDirectCollaborators(org: string, repo: string): Promise<{ login: string; permission: GithubPermission }[]>;
   listRepoTeams(org: string, repo: string): Promise<{ slug: string; permission: GithubPermission }[]>;
+  /**
+   * Every team in the org, not only teams reachable from a repository. A team with
+   * no repository grants produces no repo-team record, so deriving team membership
+   * from repos alone cannot see it — and that membership is a latent grant.
+   */
+  listOrgTeams(org: string): Promise<{ slug: string; name: string }[]>;
   listTeamMembers(org: string, slug: string): Promise<{ login: string; role: string }[]>;
   getOrgDefaultRepoPermission(org: string): Promise<GithubPermission>;
   getOrgMembership(org: string, login: string): Promise<{ state: "active" | "pending" | "none"; role: string }>;
@@ -64,6 +70,8 @@ export interface LinearAdapter {
   listTeamMemberships(userId: string): Promise<{ id: string; teamId: string; userId: string }[]>;
   getIssue(issueId: string): Promise<{ id: string; identifier: string; assigneeId: string | null; state: string } | null>;
   getTeam(teamId: string): Promise<{ id: string; key: string; name: string } | null>;
+  /** The workspace's real team ids, so the audit issue's destination is never guessed. */
+  listTeams(): Promise<{ id: string; key: string; name: string }[]>;
 
   reassignIssue(issueId: string, assigneeId: string | null): Promise<WriteResult>;
   removeTeamMembership(membershipId: string): Promise<WriteResult>;

@@ -10,12 +10,13 @@
     "eval": "tsx scripts/eval.ts",
     "smoke": "tsx scripts/smoke.ts",
     "build:scenarios": "tsx scripts/build-scenarios.ts",
-    "test": "tsx --test src/checks/*.test.ts src/core/*.test.ts src/agent/*.test.ts src/actions/*.test.ts",
+    "test": "tsx --test src/checks/*.test.ts src/core/*.test.ts src/agent/*.test.ts src/actions/*.test.ts src/adapters/github/*.test.ts",
     "offboard": "tsx scripts/offboard.ts",
     "seed:github": "tsx scripts/seed-github.ts",
     "preflight": "tsx scripts/preflight.ts",
     "google:auth": "tsx scripts/google-auth.ts",
-    "seed:drive": "tsx scripts/seed-drive.ts"
+    "seed:drive": "tsx scripts/seed-drive.ts",
+    "eval:mutation": "tsx scripts/eval-mutation.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.125.0",

@@ -44,9 +44,18 @@ export default async function EvalPage() {
               ["task success", pct(m.taskSuccessRate), m.taskSuccessRate === 1 ? "verified" : "awaiting"],
               ["caught", String(m.silentFailuresCaught), "verified"],
               ["missed", String(m.silentFailuresMissed), m.silentFailuresMissed === 0 ? "verified" : "caught"],
+              ["blocked by design", String(m.blockedByDesign), "neutral"],
               ["rollback correctness", `${m.rollbackCorrectness.correct}/${m.rollbackCorrectness.applicable}`, m.rollbackCorrectness.rate === 1 ? "verified" : "caught"],
-              ["cost / run", `$${m.costUsdPerRun.toFixed(4)}`, "neutral"],
-              ["p50 latency", `${m.latencyP50Ms}ms`, "neutral"],
+              // Cost comes from the MODEL arm. The naive baseline makes no model
+              // calls, so quoting the primary arm here would read as $0.0000.
+              ["cost / run", `$${(report.arms?.find((a) => a.planner.startsWith("claude"))?.metrics.costUsdPerRun ?? m.costUsdPerRun).toFixed(4)}`, "neutral"],
+              // Latency is deliberately absent. Every number on this page comes from
+              // the replay harness, where a scenario finishes in ~1ms; printing that
+              // as agent latency would be the exact kind of flattering, meaningless
+              // measurement this project exists to argue against. Live wall-clock is
+              // in the README.
+              ["mutants killed", report.mutation ? `${report.mutation.filter((x) => x.killed).length}/${report.mutation.length}` : "—",
+                report.mutation && report.mutation.every((x) => x.killed) ? "verified" : "caught"],
             ].map(([label, value, tone]) => (
               <div key={label}>
                 <div className="text-[11px] uppercase tracking-[0.08em] text-faint">{label}</div>
@@ -58,6 +67,55 @@ export default async function EvalPage() {
           </div>
         </div>
       </Panel>
+
+      {report.mutation && report.mutation.length > 0 && (
+        <Panel className={report.mutation.every((x) => x.killed) ? "border-verified/40" : "border-caught/50"}>
+          <PanelHeader title="mutation testing" />
+          <div className="px-4 pb-4 pt-3">
+            <p className="mb-3 max-w-[760px] text-[12px] text-faint">
+              an eval that cannot fail measures nothing. each mutant disables one safety check on purpose and the suite
+              must go red. a surviving mutant would mean the corpus never exercises that check, so a green run proves
+              nothing about it.
+            </p>
+            <ul className="space-y-1.5">
+              {report.mutation.map((x) => (
+                <li key={x.mutant} className="flex flex-wrap items-center gap-2">
+                  <Badge tone={x.killed ? "verified" : "caught"}>{x.killed ? "killed" : "survived"}</Badge>
+                  <Mono className="text-fg">{x.mutant}</Mono>
+                  <span className="text-[12px] text-faint">{x.describe}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Panel>
+      )}
+
+      {report.arms && report.arms.length > 1 && (
+        <Panel>
+          <PanelHeader title="naive baseline vs model planner" />
+          <div className="px-4 pb-4 pt-3">
+            <p className="mb-3 max-w-[760px] text-[12px] text-faint">
+              the naive arm plans the obvious way and leaves inherited grants standing, so verify has real work to do.
+              the model arm resolves grant paths while planning and usually leaves nothing. both end at zero missed.
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {report.arms.map((a) => (
+                <div key={a.planner} className="rounded border border-linesoft/60 px-3 py-2.5">
+                  <Mono className="text-fg">{a.planner}</Mono>
+                  <div className="mt-1 text-[11px] text-faint">{a.describe}</div>
+                  <div className="mono mt-2 text-[12px] text-dim">
+                    caught <span className="text-verified">{a.metrics.silentFailuresCaught}</span>
+                    {"  ·  missed "}
+                    <span className={a.metrics.silentFailuresMissed === 0 ? "text-verified" : "text-caught"}>
+                      {a.metrics.silentFailuresMissed}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Panel>
+      )}
 
       <Panel className="overflow-hidden">
         <PanelHeader title="scenario corpus" />

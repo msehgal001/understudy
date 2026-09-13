@@ -19,7 +19,20 @@ export type PlanDecision = {
   rationale: string;
 };
 
-export type BuildContext = { org: string; target: OffboardTarget; slackChannel: string };
+export type BuildContext = {
+  org: string;
+  target: OffboardTarget;
+  slackChannel: string;
+  /**
+   * Where the audit issue is filed. Same rule as slackChannel and the transfer
+   * recipient: resolved from the workspace or from configuration, never chosen by
+   * the planner. A live run had the model file the audit issue into a Linear team
+   * called "payments" — the GitHub team slug — which does not exist in Linear. The
+   * precondition caught it and refused, so nothing was written to the wrong place,
+   * but the run ended `unresolved` over a detail the model had no way to know.
+   */
+  auditTeamId?: string;
+};
 
 /**
  * Repository names arrive either bare ("payments-core") or org-qualified
@@ -194,7 +207,7 @@ const OPERATIONS = {
   },
 
   "linear.createAuditIssue": (p, ctx, id) => {
-    const teamId = String(p.teamId);
+    const teamId = ctx.auditTeamId ?? String(p.teamId);
     const title = String(p.title ?? `Offboarding audit: ${ctx.target.name}`);
     const description = String(p.description ?? "");
     let createdId: string | null = null;

@@ -10,8 +10,11 @@ export type EvalMetrics = {
   taskSuccessRate: number;
   /** THE HEADLINE. Agent claimed success; independent ground truth disagreed. */
   silentFailureRate: number;
+  /** Verify postcondition failed AFTER the write reported success. A caught lie. */
   silentFailuresCaught: number;
   silentFailuresMissed: number;
+  /** Verify failed because the action was never allowed to run. The gate working, not a lie. */
+  blockedByDesign: number;
   rollbackCorrectness: { applicable: number; correct: number; rate: number };
   costUsdTotal: number;
   costUsdPerRun: number;
@@ -24,6 +27,10 @@ export type EvalReport = {
   mode: "replay" | "live";
   plannerModel: string;
   metrics: EvalMetrics;
+  /** Both planner arms, when the suite ran more than one. See scripts/eval.ts. */
+  arms?: { planner: string; describe: string; metrics: EvalMetrics }[];
+  /** Result of npm run eval:mutation, when it has been run. */
+  mutation?: { mutant: string; describe: string; killed: boolean }[];
   scenarios: {
     id: string;
     title: string;
@@ -34,6 +41,7 @@ export type EvalReport = {
     groundTruthOk: boolean;
     silentFailure: boolean;
     caughtInVerify: number;
+    blockedByDesign: number;
     remediationRounds: number;
     rollbackCorrect: boolean | null;
     durationMs: number;
@@ -79,6 +87,7 @@ export async function runEval(
     silentFailureRate: runs.length ? runs.filter((r) => r.silentFailure).length / runs.length : 0,
     silentFailuresCaught: runs.reduce((n, r) => n + r.caughtInVerify, 0),
     silentFailuresMissed: runs.filter((r) => r.silentFailure).length,
+    blockedByDesign: runs.reduce((n, r) => n + r.blockedByDesign, 0),
     rollbackCorrectness: {
       applicable: rollbackRuns.length,
       correct: rollbackRuns.filter((r) => r.rollbackCorrect).length,
@@ -105,6 +114,7 @@ export async function runEval(
       groundTruthOk: r.groundTruthOk,
       silentFailure: r.silentFailure,
       caughtInVerify: r.caughtInVerify,
+      blockedByDesign: r.blockedByDesign,
       remediationRounds: r.result.remediationRounds,
       rollbackCorrect: r.rollbackCorrect,
       durationMs: r.durationMs,

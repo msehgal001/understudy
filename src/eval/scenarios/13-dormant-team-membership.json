@@ -7,9 +7,9 @@
     "successorGithubLogin": "sam-successor"
   },
   "slackChannel": "#offboarding",
-  "id": "12-happy-path",
-  "title": "A plain revoke with no inherited paths",
-  "proves": "No false positives on GitHub. With no team, org-base or link-sharing path hidden behind the obvious grants, the naive plan verifies first time and no GitHub remediation runs.",
+  "id": "13-dormant-team-membership",
+  "title": "A team membership that grants nothing today",
+  "proves": "A team with no repository grants is invisible to every access check, because there is no access to find. The membership is still a latent grant: attach a repo to that team later and a departed employee has it back. Only the team-membership goal check closes this.",
   "world": {
     "github": {
       "org": "acme-co",
@@ -50,6 +50,11 @@
           "slug": "web",
           "id": 2,
           "name": "Web"
+        },
+        {
+          "slug": "security-oncall",
+          "id": 3,
+          "name": "Security Oncall"
         }
       ],
       "teamRepos": [
@@ -66,12 +71,27 @@
       ],
       "teamMembers": [
         {
+          "slug": "payments",
+          "login": "dana-departing",
+          "role": "member"
+        },
+        {
           "slug": "web",
           "login": "sam-successor",
+          "role": "member"
+        },
+        {
+          "slug": "security-oncall",
+          "login": "dana-departing",
           "role": "member"
         }
       ],
       "directCollaborators": [
+        {
+          "repo": "payments-core",
+          "login": "dana-departing",
+          "permission": "write"
+        },
         {
           "repo": "docs-site",
           "login": "dana-departing",
@@ -135,6 +155,12 @@
           "type": "user",
           "role": "writer",
           "emailAddress": "dana@acme.test"
+        },
+        {
+          "id": "p6",
+          "fileId": "doc-3",
+          "type": "anyone",
+          "role": "reader"
         }
       ]
     },
@@ -194,8 +220,13 @@
   "expected": {
     "assertions": [
       {
+        "type": "github-not-team-member",
+        "slug": "security-oncall",
+        "login": "dana-departing"
+      },
+      {
         "type": "github-no-access",
-        "repo": "docs-site",
+        "repo": "payments-core",
         "login": "dana-departing"
       }
     ]

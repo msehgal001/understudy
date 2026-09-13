@@ -1,22 +1,23 @@
 {
-  "generatedAt": "2026-09-13T19:58:03.181Z",
+  "generatedAt": "2026-09-13T20:59:21.888Z",
   "mode": "replay",
-  "plannerModel": "claude-sonnet-5 (replayed, 12 recorded)",
+  "plannerModel": "naive-baseline",
   "metrics": {
-    "scenarios": 12,
+    "scenarios": 13,
     "taskSuccessRate": 1,
     "silentFailureRate": 0,
-    "silentFailuresCaught": 9,
+    "silentFailuresCaught": 37,
     "silentFailuresMissed": 0,
+    "blockedByDesign": 5,
     "rollbackCorrectness": {
       "applicable": 1,
       "correct": 1,
       "rate": 1
     },
-    "costUsdTotal": 0.43997400000000003,
-    "costUsdPerRun": 0.0366645,
+    "costUsdTotal": 0,
+    "costUsdPerRun": 0,
     "latencyP50Ms": 1,
-    "latencyP95Ms": 43
+    "latencyP95Ms": 42
   },
   "scenarios": [
     {
@@ -28,11 +29,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 0,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
       "durationMs": 3,
-      "costUsd": 0.036292000000000005,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
@@ -49,8 +51,8 @@
           }
         }
       ],
-      "summary": "All 14 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-01-inherited-team-access.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-01-inherited-team-access.jsonl"
     },
     {
       "id": "02-org-base-permission",
@@ -61,11 +63,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 0,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 2,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 1,
-      "costUsd": 0.039792,
+      "durationMs": 2,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
@@ -75,8 +78,8 @@
           }
         }
       ],
-      "summary": "All 15 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-02-org-base-permission.jsonl"
+      "summary": "All 21 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-02-org-base-permission.jsonl"
     },
     {
       "id": "03-drive-link-sharing",
@@ -87,11 +90,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 0,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
       "durationMs": 1,
-      "costUsd": 0.034622,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"drive-no-access\",\"fileId\":\"doc-3\",\"email\":\"dana@acme.test\"}",
@@ -102,8 +106,8 @@
           }
         }
       ],
-      "summary": "All 12 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-03-drive-link-sharing.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-03-drive-link-sharing.jsonl"
     },
     {
       "id": "04-commit-timeout-rollback",
@@ -115,10 +119,11 @@
       "groundTruthOk": true,
       "silentFailure": false,
       "caughtInVerify": 0,
+      "blockedByDesign": 0,
       "remediationRounds": 0,
       "rollbackCorrect": true,
       "durationMs": 0,
-      "costUsd": 0.03252,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"world-unchanged\"}",
@@ -128,8 +133,8 @@
           }
         }
       ],
-      "summary": "Commit failed on gh-remove-direct-payments-core: request timed out: github.removeCollaborator. Completed actions were rolled back in reverse order.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-04-commit-timeout-rollback.jsonl"
+      "summary": "Commit failed on revoke-gh-payments-core: request timed out: github.removeCollaborator. Completed actions were rolled back in reverse order.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-04-commit-timeout-rollback.jsonl"
     },
     {
       "id": "05-rate-limited",
@@ -140,11 +145,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 0,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 43,
-      "costUsd": 0.035642,
+      "durationMs": 42,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
@@ -154,8 +160,8 @@
           }
         }
       ],
-      "summary": "All 12 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-05-rate-limited.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-05-rate-limited.jsonl"
     },
     {
       "id": "06-stale-cache",
@@ -166,11 +172,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 1,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 1,
-      "costUsd": 0.036222000000000004,
+      "durationMs": 0,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
@@ -180,8 +187,8 @@
           }
         }
       ],
-      "summary": "All 19 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-06-stale-cache.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-06-stale-cache.jsonl"
     },
     {
       "id": "07-drive-sole-owner",
@@ -192,11 +199,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 1,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 1,
-      "costUsd": 0.034122,
+      "durationMs": 0,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"drive-owner\",\"fileId\":\"doc-1\",\"email\":\"sam@acme.test\"}",
@@ -214,8 +222,8 @@
           }
         }
       ],
-      "summary": "All 17 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-07-drive-sole-owner.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-07-drive-sole-owner.jsonl"
     },
     {
       "id": "08-successor-also-departing",
@@ -226,11 +234,12 @@
       "claimedSuccess": false,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 1,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 1,
-      "costUsd": 0.051662,
+      "durationMs": 0,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"drive-owner\",\"fileId\":\"doc-1\",\"email\":\"dana@acme.test\"}",
@@ -240,8 +249,8 @@
           }
         }
       ],
-      "summary": "1 postcondition(s) still failing after 0 remediation round(s). Access may persist.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-08-successor-also-departing.jsonl"
+      "summary": "All 17 evaluated postconditions passed, but 1 planned action(s) did not run. The plan is not complete.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-08-successor-also-departing.jsonl"
     },
     {
       "id": "09-irreversible-needs-approval",
@@ -252,11 +261,12 @@
       "claimedSuccess": false,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 4,
-      "remediationRounds": 1,
+      "caughtInVerify": 5,
+      "blockedByDesign": 3,
+      "remediationRounds": 2,
       "rollbackCorrect": null,
       "durationMs": 1,
-      "costUsd": 0.037961999999999996,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-has-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
@@ -266,8 +276,8 @@
           }
         }
       ],
-      "summary": "4 postcondition(s) still failing after 1 remediation round(s). Access may persist.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-09-irreversible-needs-approval.jsonl"
+      "summary": "3 postcondition(s) still failing after 2 remediation round(s). Access may persist.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-09-irreversible-needs-approval.jsonl"
     },
     {
       "id": "10-idempotent-replay",
@@ -278,11 +288,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 0,
-      "remediationRounds": 0,
+      "caughtInVerify": 3,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
       "rollbackCorrect": null,
       "durationMs": 1,
-      "costUsd": 0.03385,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
@@ -292,8 +303,8 @@
           }
         }
       ],
-      "summary": "All 12 postconditions independently re-read and passed. Replay wrote 0 new action(s).",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-10-idempotent-replay.jsonl"
+      "summary": "All 18 postconditions independently re-read and passed. Replay wrote 0 new action(s).",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-10-idempotent-replay.jsonl"
     },
     {
       "id": "11-two-surviving-paths",
@@ -304,11 +315,12 @@
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 1,
+      "caughtInVerify": 4,
+      "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 0,
-      "costUsd": 0.031852,
+      "durationMs": 1,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
@@ -332,23 +344,24 @@
           }
         }
       ],
-      "summary": "All 19 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-11-two-surviving-paths.jsonl"
+      "summary": "All 20 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-11-two-surviving-paths.jsonl"
     },
     {
       "id": "12-happy-path",
       "title": "A plain revoke with no inherited paths",
-      "proves": "No false positives. When there is nothing hidden, verify passes first time and no remediation runs.",
+      "proves": "No false positives on GitHub. With no team, org-base or link-sharing path hidden behind the obvious grants, the naive plan verifies first time and no GitHub remediation runs.",
       "status": "verified",
       "taskSuccess": true,
       "claimedSuccess": true,
       "groundTruthOk": true,
       "silentFailure": false,
-      "caughtInVerify": 1,
-      "remediationRounds": 1,
+      "caughtInVerify": 0,
+      "blockedByDesign": 0,
+      "remediationRounds": 0,
       "rollbackCorrect": null,
-      "durationMs": 0,
-      "costUsd": 0.035436,
+      "durationMs": 1,
+      "costUsd": 0,
       "oracle": [
         {
           "assertion": "{\"type\":\"github-no-access\",\"repo\":\"docs-site\",\"login\":\"dana-departing\"}",
@@ -358,8 +371,103 @@
           }
         }
       ],
-      "summary": "All 14 postconditions independently re-read and passed.",
-      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/eval-12-happy-path.jsonl"
+      "summary": "All 10 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-12-happy-path.jsonl"
+    },
+    {
+      "id": "13-dormant-team-membership",
+      "title": "A team membership that grants nothing today",
+      "proves": "A team with no repository grants is invisible to every access check, because there is no access to find. The membership is still a latent grant: attach a repo to that team later and a departed employee has it back. Only the team-membership goal check closes this.",
+      "status": "verified",
+      "taskSuccess": true,
+      "claimedSuccess": true,
+      "groundTruthOk": true,
+      "silentFailure": false,
+      "caughtInVerify": 4,
+      "blockedByDesign": 0,
+      "remediationRounds": 1,
+      "rollbackCorrect": null,
+      "durationMs": 1,
+      "costUsd": 0,
+      "oracle": [
+        {
+          "assertion": "{\"type\":\"github-not-team-member\",\"slug\":\"security-oncall\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "present": false
+          }
+        },
+        {
+          "assertion": "{\"type\":\"github-no-access\",\"repo\":\"payments-core\",\"login\":\"dana-departing\"}",
+          "pass": true,
+          "observed": {
+            "permission": "none"
+          }
+        }
+      ],
+      "summary": "All 20 postconditions independently re-read and passed.",
+      "tracePath": "/Users/madhavsehgal/Claude/Lemma hackathon/understudy/traces/eval/naive/eval-13-dormant-team-membership.jsonl"
+    }
+  ],
+  "arms": [
+    {
+      "planner": "naive-baseline",
+      "describe": "plans the obvious way; inherited grants survive and verify must catch them",
+      "metrics": {
+        "scenarios": 13,
+        "taskSuccessRate": 1,
+        "silentFailureRate": 0,
+        "silentFailuresCaught": 37,
+        "silentFailuresMissed": 0,
+        "blockedByDesign": 5,
+        "rollbackCorrectness": {
+          "applicable": 1,
+          "correct": 1,
+          "rate": 1
+        },
+        "costUsdTotal": 0,
+        "costUsdPerRun": 0,
+        "latencyP50Ms": 1,
+        "latencyP95Ms": 42
+      }
+    },
+    {
+      "planner": "claude-sonnet-5 (replayed, 12 recorded)",
+      "describe": "resolves grant paths during planning, so verify usually finds nothing left",
+      "metrics": {
+        "scenarios": 13,
+        "taskSuccessRate": 1,
+        "silentFailureRate": 0,
+        "silentFailuresCaught": 11,
+        "silentFailuresMissed": 0,
+        "blockedByDesign": 2,
+        "rollbackCorrectness": {
+          "applicable": 1,
+          "correct": 1,
+          "rate": 1
+        },
+        "costUsdTotal": 0.43997400000000003,
+        "costUsdPerRun": 0.03384415384615385,
+        "latencyP50Ms": 1,
+        "latencyP95Ms": 42
+      }
+    }
+  ],
+  "mutation": [
+    {
+      "mutant": "gh.no-access",
+      "describe": "GitHub effective-access check always passes",
+      "killed": true
+    },
+    {
+      "mutant": "gh.not-team-member",
+      "describe": "GitHub team-membership check always passes",
+      "killed": true
+    },
+    {
+      "mutant": "drive.no-access",
+      "describe": "Drive access check always passes",
+      "killed": true
     }
   ]
 }

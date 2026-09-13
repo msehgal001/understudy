@@ -31,6 +31,8 @@ export type Config = {
   linearApiKey: string;
   slackBotToken: string;
   slackChannel: string;
+  /** Optional. When unset, the live runner resolves the first team in the workspace. */
+  linearTeamId: string;
   anthropicApiKey: string;
   target: OffboardTarget;
 };
@@ -45,6 +47,7 @@ export function readConfig(): Config {
     linearApiKey: e.LINEAR_API_KEY ?? "",
     slackBotToken: e.SLACK_BOT_TOKEN ?? "",
     slackChannel: e.SLACK_CHANNEL ?? "#offboarding",
+    linearTeamId: e.LINEAR_TEAM_ID ?? "",
     anthropicApiKey: e.ANTHROPIC_API_KEY ?? "",
     target: {
       githubLogin: e.DEPARTING_GITHUB_LOGIN ?? "",

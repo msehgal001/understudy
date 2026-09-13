@@ -19,12 +19,18 @@ The headline number is the **silent failure rate**: runs where the agent claimed
 success and independent ground truth said otherwise.
 
 ```
-silent failure rate      0.0%     over 12 scenarios, claude-sonnet-5 planner
-silent failures caught   3
+silent failure rate      0.0%     over 13 scenarios, both planner arms
+silent failures caught   37       naive baseline · 11 with the claude-sonnet-5 planner
 silent failures missed   0
 task success rate        100.0%
 rollback correctness     1/1
+mutants killed           3/3      the suite goes red when a safety check is broken
 ```
+
+The last line matters more than the first. A silent failure rate of zero is only
+worth reading if the suite could have reported something else, so `npm run
+eval:mutation` breaks each safety check on purpose and requires the suite to
+notice. See [Mutation testing](#mutation-testing-proving-the-eval-can-fail).
 
 ---
 
@@ -220,7 +226,7 @@ is there for.
 
 ## Failure modes the eval covers
 
-12 frozen fixtures in `src/eval/scenarios/`, each a complete `WorldState` plus a
+13 frozen fixtures in `src/eval/scenarios/`, each a complete `WorldState` plus a
 hand-authored known-correct end state. They run against `ShadowAdapter`, so the
 suite is fast and deterministic.
 
@@ -238,6 +244,7 @@ suite is fast and deterministic.
 | 10 | Idempotent replay | Re-running a completed run writes nothing twice |
 | 11 | Two surviving paths | Closing one inherited path is not enough; remediation loops until a re-read agrees |
 | 12 | Happy path | No false positives when there is nothing hidden |
+| 13 | Dormant team membership | A team with no repo grants is invisible to every access check and is still a latent grant |
 
 ### Why the number means anything
 
@@ -253,47 +260,105 @@ own reflection.
 
 ### Measured results
 
-Against recorded `claude-sonnet-5` plans:
+Two arms, and `npm run eval` runs both. The **naive baseline** plans the obvious
+way and leaves inherited grants standing, so verify has real work to do. The
+**model arm** replays recorded `claude-sonnet-5` plans, which resolve grant paths
+during planning and usually leave nothing behind.
 
 ```
 $ npm run eval
-UNDERSTUDY EVAL  replay · claude-sonnet-5 (replayed, 12 recorded) · 12 scenarios
 
-  PASS  01-inherited-team-access       verified
-  PASS  02-org-base-permission         verified
-  PASS  03-drive-link-sharing          verified
+UNDERSTUDY EVAL  naive-baseline · replay · 13 scenarios
+
+  PASS  01-inherited-team-access       verified     caught:3
+  PASS  02-org-base-permission         verified     caught:3 blocked:1
+  PASS  03-drive-link-sharing          verified     caught:3
   PASS  04-commit-timeout-rollback     rolled-back
-  PASS  05-rate-limited                verified
-  PASS  06-stale-cache                 verified
-  PASS  07-drive-sole-owner            verified
-  PASS  08-successor-also-departing    unresolved
-  PASS  09-irreversible-needs-approval unresolved   caught:3
-  PASS  10-idempotent-replay           verified
-  PASS  11-two-surviving-paths         verified
+  PASS  05-rate-limited                verified     caught:3
+  PASS  06-stale-cache                 verified     caught:3
+  PASS  07-drive-sole-owner            verified     caught:3
+  PASS  08-successor-also-departing    unresolved   caught:3
+  PASS  09-irreversible-needs-approval unresolved   caught:5 blocked:3
+  PASS  10-idempotent-replay           verified     caught:3
+  PASS  11-two-surviving-paths         verified     caught:4
   PASS  12-happy-path                  verified
+  PASS  13-dormant-team-membership     verified     caught:4
 
-METRICS
   task success rate        100.0%
-  silent failure rate      0.0%    (claimed success, ground truth disagreed)
-  silent failures caught   3
+  silent failure rate      0.0%   (claimed success, ground truth disagreed)
+  silent failures caught   37     (write reported success, re-read disagreed)
   silent failures missed   0
+  blocked by design        5      (action never ran; the approval gate holding)
   rollback correctness     1/1 (100.0%)
-  cost per run             $0.0407   (live: ~$0.04 and ~89s per run)
-  latency p50 / p95        1ms / 43ms
+
+NAIVE vs MODEL
+                            naive       model
+  silent failures caught    37          11
+  silent failures missed    0           0
 ```
 
+Live wall-clock, measured against the real GitHub org, Drive, Linear and Slack:
+**~89s and ~$0.034 per run**. The per-scenario millisecond timings the replay
+harness reports are the harness, not the agent, so they are deliberately not
+quoted as latency anywhere in this project.
+
+**`caught` and `blocked by design` are different things and used to be added
+together.** A verify postcondition that fails because the human withheld approval
+is the gate working, not a lie detected: the write never ran, so nothing claimed
+success. Only a check that fails *after* a write reported success counts as a
+caught silent failure. Conflating them inflated the headline with the opposite of
+a failure, and `src/eval/run-scenario.ts` now separates them by requiring a
+successful `commit:applied` event for the action before counting a catch.
+
 **The `caught` number depends on how good the planner is, and that is the
-interesting part.** Against the deterministic stub planner the same suite catches
-**25** surviving grants, because a literal-minded plan closes the record it can
-see and leaves every inherited path standing. Against `claude-sonnet-5` it
-catches **3**, because the model reads the grant paths in the survey and plans
-the team removals up front.
+interesting part.** The naive baseline catches 37 surviving grants, because a
+literal-minded plan closes the record it can see and leaves every inherited path
+standing. `claude-sonnet-5` catches 11, because it reads the grant paths from the
+survey and plans the team removals up front. Both end at zero missed.
 
 Verify is not there because the model is careless. It is there because some
-failures are structural: the three the model could not pre-empt are `org-base`
-grants, where no per-repo action exists to plan — the only fix is irreversible
-and stops for a human. A better planner moves the catches; it does not remove the
-need for them.
+failures are structural: `org-base` grants have no per-repo action to plan, and
+the only fix is irreversible and stops for a human. A better planner moves the
+catches; it does not remove the need for them.
+
+<a id="mutation-testing-proving-the-eval-can-fail"></a>
+### Mutation testing: proving the eval can fail
+
+An eval that cannot fail measures nothing. The suite reported a silent failure
+rate of zero for most of this project's life, and that number was decoration
+until it was tested.
+
+`npm run eval:mutation` breaks one safety check at a time, forcing it to return a
+clean pass without looking at what it read, and requires the suite to go red. A
+mutant that **survives** means no scenario's ground truth depends on that check,
+so a green run proves nothing about it.
+
+```
+$ npm run eval:mutation
+
+MUTATION TESTING  break a check on purpose; the eval must go red
+
+  KILLED    gh.no-access           GitHub effective-access check always passes
+  KILLED    gh.not-team-member     GitHub team-membership check always passes
+  KILLED    drive.no-access        Drive access check always passes
+
+  3/3 mutants killed
+```
+
+It did not start at 3/3. The first run killed two and `gh.not-team-member`
+survived, which exposed a real hole in the product rather than the test:
+
+- Team membership was only ever **discovered** by walking repositories and
+  reading their team grants. A team with no repository grants produces no
+  repo-team record, so it was invisible to discovery entirely.
+- Goal checks covered repo access and Drive files, never team membership.
+
+So a departing employee left on a dormant team passed every check. The day
+someone attaches a repository to that team, a person who left months ago has
+access again. Fixed in `src/core/discover.ts` by enumerating the org's teams
+directly, in `src/core/goals.ts` by adding a membership goal per discovered team,
+and in `src/core/remediate.ts` by closing one when verify finds it. Scenario 13
+pins it, and the mutant now dies.
 
 ### What the live run cost me
 
@@ -305,6 +370,44 @@ about 18 minutes wall-clock. After that the suite replays for free in ~50ms.
 Worth naming, because an eval that never fails its own author is decorative. Every
 one of these is the same mistake in a different costume — trusting something that
 reported success:
+
+The last three were found on the day of the deadline, by an adversarial audit and
+by mutation testing, and they are the most instructive ones here.
+
+0. **The eval itself could not fail.** Forcing the headline check
+   `githubNoEffectiveAccess` to return a clean pass changed nothing: all scenarios
+   still passed and the silent failure rate stayed at 0.0%. The recorded Sonnet
+   plans already closed every inherited path before verify ran, so the check never
+   had anything to catch and a broken check was indistinguishable from a working
+   one. The suite now runs a **naive baseline arm** where verify has real work, and
+   `npm run eval:mutation` fails the build if any safety check can be broken
+   without the suite noticing.
+
+0b. **A team-derived `write` grant was invisible to rehearsal in live mode.**
+   GitHub returns repo-team permissions in its legacy vocabulary (`pull`/`push`)
+   while role names use the modern one (`read`/`write`). The world ranks only the
+   modern set, so an un-normalised `push` fell out of the rank table as `undefined`
+   and compared as no access at all. The eval never caught it because the eval's
+   "live" adapter is itself a shadow, so the live adapters had no contract test.
+   `src/adapters/github/vocabulary.test.ts` is now that contract, in both
+   directions — GitHub also rejects `write` on the collaborators endpoint, so
+   rolling back a removal would have failed too.
+
+0d. **The audit issue was filed at an address the model invented.** On a live run
+   Sonnet filed the Linear audit issue into a team called `payments` — the GitHub
+   team slug, which does not exist in Linear. The precondition caught it and the
+   run ended `unresolved`, so nothing was written to the wrong place, but this was
+   never the model's decision to make. The destination now comes from
+   `LINEAR_TEAM_ID` or is resolved from the workspace, the same rule already used
+   for the Slack channel and the transfer recipient, and `npm run preflight`
+   checks it resolves before a run starts.
+
+0c. **A dormant team membership was invisible to everything.** Described under
+   [Mutation testing](#mutation-testing-proving-the-eval-can-fail): team membership
+   was discovered only by walking repositories, so a team with no repository grants
+   was never seen, and no goal check covered membership. A departing employee left
+   on that team passed every check and would silently regain access the moment the
+   team was given a repo.
 
 1. **A skipped action was reported as success.** A precondition correctly refused
    to transfer a file, and the run still finished `verified`. Preconditions that
@@ -366,6 +469,13 @@ do it to.
 The first two were caught by the oracle disagreeing with a run that claimed
 success; the rest by running against real APIs. That is the entire thesis, applied
 to its own implementation.
+
+### One trace file per run
+
+`src/core/trace.ts` used to open the JSONL stream in append mode while the eval
+reused a run id per scenario, so a single file accumulated many runs. The trace
+viewer and the Opus judge then read a stale, self-contradictory history and scored
+an execution that had not happened. The stream is truncated on open.
 
 ### Verification is goal-based, not action-based
 

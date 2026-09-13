@@ -22,6 +22,11 @@ export class ShadowLinearAdapter implements LinearAdapter {
     this.stale = cloneWorld(this.world);
   }
 
+  async listTeams() {
+    const w = this.read("linear.listTeams").linear;
+    return w.teams.map((t) => ({ id: t.id, key: t.key, name: t.name }));
+  }
+
   async getUserByEmail(email: string) {
     const u = this.read("linear.getUserByEmail").linear.users.find((x) => x.email === email);
     return u ? { ...u } : null;

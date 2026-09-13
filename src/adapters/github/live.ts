@@ -38,13 +38,19 @@ export class LiveGithubAdapter implements GithubAdapter {
   async listDirectCollaborators(org: string, repo: string) {
     const res = await this.get(`/repos/${org}/${repo}/collaborators?affiliation=direct&per_page=100`);
     const rows = asArray<{ login: string; role_name?: string; permissions?: Record<string, boolean> }>(res.body);
-    return rows.map((r) => ({ login: r.login, permission: (r.role_name ?? highestFromFlags(r.permissions)) as GithubPermission }));
+    return rows.map((r) => ({ login: r.login, permission: normalizePermission(r.role_name ?? highestFromFlags(r.permissions)) }));
   }
 
   async listRepoTeams(org: string, repo: string) {
     const res = await this.get(`/repos/${org}/${repo}/teams?per_page=100`);
     const rows = asArray<{ slug: string; permission: string; permissions?: Record<string, boolean> }>(res.body);
-    return rows.map((t) => ({ slug: t.slug, permission: (t.permission ?? highestFromFlags(t.permissions)) as GithubPermission }));
+    return rows.map((t) => ({ slug: t.slug, permission: normalizePermission(t.permission ?? highestFromFlags(t.permissions)) }));
+  }
+
+  async listOrgTeams(org: string) {
+    const res = await this.get(`/orgs/${org}/teams?per_page=100`);
+    const rows = asArray<{ slug: string; name: string }>(res.body);
+    return rows.map((t) => ({ slug: t.slug, name: t.name }));
   }
 
   async listTeamMembers(org: string, slug: string) {
@@ -56,7 +62,7 @@ export class LiveGithubAdapter implements GithubAdapter {
   async getOrgDefaultRepoPermission(org: string) {
     const res = await this.get(`/orgs/${org}`);
     const perm = (res.body as { default_repository_permission?: string })?.default_repository_permission;
-    return (perm ?? "none") as GithubPermission;
+    return normalizePermission(perm);
   }
 
   async getOrgMembership(org: string, login: string) {
@@ -70,14 +76,14 @@ export class LiveGithubAdapter implements GithubAdapter {
     const res = await this.get(`/repos/${org}/${repo}/collaborators/${login}/permission`);
     if (res.status === 404) return { permission: "none" as GithubPermission };
     const b = res.body as { permission?: string; role_name?: string };
-    return { permission: ((b.role_name ?? b.permission ?? "none") as GithubPermission) };
+    return { permission: normalizePermission(b.role_name ?? b.permission) };
   }
 
   removeCollaborator(org: string, repo: string, login: string) {
     return this.write("DELETE", `/repos/${org}/${repo}/collaborators/${login}`);
   }
   addCollaborator(org: string, repo: string, login: string, permission: GithubPermission) {
-    return this.write("PUT", `/repos/${org}/${repo}/collaborators/${login}`, { permission });
+    return this.write("PUT", `/repos/${org}/${repo}/collaborators/${login}`, { permission: toGithubWire(permission) });
   }
   removeTeamMember(org: string, slug: string, login: string) {
     return this.write("DELETE", `/orgs/${org}/teams/${slug}/memberships/${login}`);
@@ -97,6 +103,34 @@ export class LiveGithubAdapter implements GithubAdapter {
  */
 function asArray<T>(body: unknown): T[] {
   return Array.isArray(body) ? (body as T[]) : [];
+}
+
+/**
+ * GitHub speaks two permission vocabularies and hands them back from different
+ * endpoints. `GET /repos/{o}/{r}/teams` returns the legacy repo-team words
+ * ("pull"/"push"), while `role_name` and `default_repository_permission` return
+ * the modern ones ("read"/"write"). Our WorldState ranks only the modern set, so
+ * an un-normalised "push" fell out of the rank table as undefined and a
+ * team-derived WRITE grant became invisible to rehearsal in live mode — exactly
+ * the class of surviving access this project exists to catch.
+ */
+export function normalizePermission(p?: string | null): GithubPermission {
+  switch (p) {
+    case "pull": return "read";
+    case "push": return "write";
+    case "read": case "triage": case "write": case "maintain": case "admin": case "none":
+      return p;
+    default: return "none";
+  }
+}
+
+/** The inverse, for writes. GitHub rejects "read"/"write" on the collaborators endpoint. */
+export function toGithubWire(p: GithubPermission): string {
+  switch (p) {
+    case "read": return "pull";
+    case "write": return "push";
+    default: return p;
+  }
 }
 
 function highestFromFlags(p?: Record<string, boolean>): string {

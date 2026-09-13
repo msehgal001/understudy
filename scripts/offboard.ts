@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import readline from "node:readline/promises";
+import type { AdapterSet } from "@/adapters/types";
 import { adapterSet } from "@/adapters/registry";
 import { execute } from "@/core/executor";
 import { Tracer } from "@/core/trace";
@@ -45,7 +46,10 @@ async function main() {
     live = adapterSet("live", { config });
     const world = await seedWorldFromLive(live, config.target, config.githubOrg, tracer);
     shadow = adapterSet("shadow", { world });
-    build = { org: config.githubOrg, target: config.target, slackChannel: config.slackChannel };
+    build = {
+      org: config.githubOrg, target: config.target, slackChannel: config.slackChannel,
+      auditTeamId: await resolveAuditTeam(live, config.linearTeamId),
+    };
   } else {
     console.error(red("shadow mode without --scenario has nothing to read from. Pass --scenario=<id> or --mode=live."));
     process.exit(2);
@@ -124,3 +128,19 @@ async function main() {
   process.exit(result.status === "verified" ? 0 : 1);
 }
 main();
+
+/**
+ * The audit issue's destination is resolved from the workspace, not planned. See
+ * BuildContext.auditTeamId for the live run that made this necessary.
+ */
+async function resolveAuditTeam(live: AdapterSet, configured: string): Promise<string | undefined> {
+  if (configured) return configured;
+  try {
+    const teams = await live.linear.listTeams();
+    if (!teams.length) return undefined;
+    console.log(dim(`  linear audit team resolved from workspace: ${teams[0].name} (${teams[0].key})`));
+    return teams[0].id;
+  } catch {
+    return undefined;
+  }
+}

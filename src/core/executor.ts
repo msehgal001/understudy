@@ -5,6 +5,7 @@ import { RateLimitError } from "@/adapters/faults";
 import { materialize, type PlanDecision, type BuildContext } from "@/actions/index";
 import { validateOrdering, type OrderingViolation } from "@/core/ordering";
 import { remediationsFor, type VerificationFailure } from "@/core/remediate";
+import { applyMutation } from "@/eval/mutate";
 import { discover, type Discovery } from "@/core/discover";
 import { goalChecks } from "@/core/goals";
 import type { Tracer } from "@/core/trace";
@@ -121,6 +122,9 @@ async function runChecks(checks: Check[], adapters: AdapterSet, tracer: Tracer, 
         note: unverifiable ? `could not verify: ${msg}` : `check threw: ${msg}`,
       };
     }
+    // Mutation testing seam. Inert unless the eval explicitly injects a mutant;
+    // see src/eval/mutate.ts for why an eval that cannot fail measures nothing.
+    result = applyMutation(c.id, result);
     tracer.emit({
       type: kind, phase, actionId, checkId: c.id, label: c.describe,
       ok: result.pass, observed: result.observed, detail: result.note ? { note: result.note } : undefined,

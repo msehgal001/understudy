@@ -55,6 +55,19 @@ export function remediationsFor(f: VerificationFailure, ctx: { org: string; logi
     }
   }
 
+  // ---- github: team membership survived, with or without a repo grant attached
+  if (f.checkId.startsWith("gh.not-team-member:")) {
+    const slug = f.checkId.split(":")[1]?.split("/")[1] ?? "";
+    if (slug) {
+      out.push({
+        id: `remediate-team-${slug}`,
+        operation: "github.removeTeamMember",
+        params: { slug, login: ctx.login },
+        rationale: `Verify found the departing user still on team "${slug}". The team may grant no repository access today, which is exactly why nothing else flags it, and exactly why it is worth closing.`,
+      });
+    }
+  }
+
   // ---- drive: access survived a permission delete
   if (f.checkId.startsWith("drive.no-access:")) {
     const fileId = f.checkId.split(":")[1] ?? "";

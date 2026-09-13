@@ -88,6 +88,24 @@ async function main() {
       const name = (res.body as { data?: { viewer?: { name?: string } } })?.data?.viewer?.name;
       add("LINEAR_API_KEY", !!name, name ? `viewer: ${name}` : `unexpected response: ${JSON.stringify(res.body).slice(0, 80)}`);
     } catch (e) { add("LINEAR_API_KEY", false, String(e)); }
+
+    // Where the audit issue is filed must resolve to a real team BEFORE a run
+    // starts. A live run had the model file it into a Linear team named after the
+    // GitHub team slug; the precondition refused, nothing was written to the wrong
+    // place, and the run ended unresolved over a detail the model could not know.
+    try {
+      const res = await httpJson("https://api.linear.app/graphql", {
+        method: "POST", headers: { Authorization: c.linearApiKey, "Content-Type": "application/json" },
+        body: JSON.stringify({ query: "{ teams(first: 50) { nodes { id key name } } }" }),
+      });
+      const nodes = (res.body as { data?: { teams?: { nodes?: { id: string; key: string; name: string }[] } } })?.data?.teams?.nodes ?? [];
+      if (c.linearTeamId) {
+        const hit = nodes.find((t) => t.id === c.linearTeamId);
+        add("linear audit team", !!hit, hit ? `LINEAR_TEAM_ID -> ${hit.name} (${hit.key})` : `LINEAR_TEAM_ID=${c.linearTeamId} matches no team in this workspace`);
+      } else {
+        add("linear audit team", nodes.length > 0, nodes.length ? `unset; resolves to ${nodes[0].name} (${nodes[0].key})` : "no teams in this workspace");
+      }
+    } catch (e) { add("linear audit team", false, String(e)); }
   }
 
   // --- Slack. auth.test returning ok is not enough: posting and reading back are

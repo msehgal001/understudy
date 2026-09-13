@@ -32,7 +32,8 @@ export type TraceEvent = {
 export type TraceSink = (e: TraceEvent) => void;
 
 /**
- * Append-only JSONL. This file is the artifact the eval harness scores and the
+ * One JSONL file per run, truncated on open. This file is the artifact the eval
+ * harness scores and the
  * trace judge reads — neither of them reads the agent's own summary, because a
  * summary is exactly the thing under suspicion.
  */
@@ -49,7 +50,10 @@ export class Tracer {
     if (!opts.memoryOnly) {
       const dir = opts.dir ?? path.join(process.cwd(), "traces");
       fs.mkdirSync(dir, { recursive: true });
-      this.stream = fs.createWriteStream(path.join(dir, `${runId}.jsonl`), { flags: "a" });
+      // Truncate. A run id is reused across eval runs, and appending made one file
+      // hold many runs at once — the trace viewer and the judge then read a stale,
+      // self-contradictory history and score the wrong execution.
+      this.stream = fs.createWriteStream(path.join(dir, `${runId}.jsonl`), { flags: "w" });
     }
   }
 

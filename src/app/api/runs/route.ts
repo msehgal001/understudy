@@ -41,7 +41,11 @@ export async function POST(req: Request) {
         live = adapterSet("live", { config });
         const world = await seedWorldFromLive(live, config.target, config.githubOrg, tracer);
         shadow = adapterSet("shadow", { world });
-        build = { org: config.githubOrg, target: config.target, slackChannel: config.slackChannel };
+        let auditTeamId: string | undefined = config.linearTeamId || undefined;
+        if (!auditTeamId) {
+          try { auditTeamId = (await live.linear.listTeams())[0]?.id; } catch { auditTeamId = undefined; }
+        }
+        build = { org: config.githubOrg, target: config.target, slackChannel: config.slackChannel, auditTeamId };
         mode = "live";
       }
 

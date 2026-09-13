@@ -326,7 +326,7 @@
 
     <div class="evidence">
       <div class="evidence-head">
-        <span>run-mu0a9qic</span>
+        <span>run-mu08jfm5</span>
         <span>·</span>
         <span>msehgal-org/payments-core</span>
         <span>·</span>
@@ -340,12 +340,12 @@
         </div>
         <div class="half half-b">
           <div class="half-label">What the independent re-read found</div>
-          <div class="verdict verdict-b">admin</div>
-          <p class="verdict-note"><code>GET /repos/{org}/{repo}/collaborators/{user}/permission</code> &mdash; still administrator.</p>
+          <div class="verdict verdict-b">write</div>
+          <p class="verdict-note"><code>GET /repos/{org}/{repo}/collaborators/{user}/permission</code> &mdash; still writable.</p>
         </div>
       </div>
       <div class="evidence-foot">
-        Surviving paths <span class="mono">team:payments</span> and <span class="mono">org-base</span>. The collaborator record was deleted exactly as requested; the team grant and the organisation default were never addressed by it. <strong>GitHub documents that this endpoint returns the highest role across repository, team, organisation and enterprise, and that there is no way to tell which one produced it.</strong> It can say whether access survives. It can never say why.
+        Surviving path <span class="mono">org-base</span>. The collaborator record was deleted exactly as requested, and the plan had already removed the team membership as well. What neither addressed is the organisation&rsquo;s default repository permission, which grants every member write on every repository with no record to delete. <strong>GitHub documents that this endpoint returns the highest role across repository, team, organisation and enterprise, and that there is no way to tell which one produced it.</strong> It can say whether access survives. It can never say why.
       </div>
     </div>
 
@@ -357,6 +357,8 @@
     </div>
 
     <p class="measure">Both calls succeeded. Neither is buggy. The revoke did exactly what it claimed and the access survived anyway, because the agent and the API were answering different questions.</p>
+
+    <p class="measure">This outcome reproduced on all eleven complete live runs recorded in <span class="mono">traces/</span>, without exception. It is the seeded failure the project is built around, and it is deliberately the one no plan can avoid: there is no per-repository action that closes an organisation-wide default.</p>
   </section>
 
   <section>
@@ -440,7 +442,7 @@
           <tr><td>Scenarios</td><td class="num">13</td></tr>
           <tr><td>Mutants killed</td><td class="num">3 / 3</td></tr>
           <tr><td>Rollback correctness</td><td class="num">1 / 1</td></tr>
-          <tr><td>Live run, wall clock</td><td class="num">~44 s</td></tr>
+          <tr><td>Live run, wall clock</td><td class="num">~40 s</td></tr>
           <tr><td>Unit &amp; integration tests</td><td class="num">34 passing</td></tr>
         </tbody>
       </table>
@@ -449,7 +451,7 @@
     <div class="callout">
       <p><strong>Caught and blocked are different things, and they used to be added together.</strong></p>
       <p>A verify failure only counts as a caught lie when the write actually committed and reported success. A check that fails because a human withheld approval is the gate working, not a lie detected &mdash; the write never ran, so nothing claimed anything. Conflating them inflated the headline with the opposite of a failure. They are now separated by requiring a successful commit event for the action before a catch is counted.</p>
-      <p style="margin-bottom:0">The corpus runs against the shadow adapter, so it is deterministic and finishes in milliseconds. Those per-scenario timings are the harness, not the agent, and are deliberately never quoted as latency anywhere in this project. Live wall clock is measured separately, end to end from the trace: 44 seconds and $0.035 for the run quoted at the top of this page.</p>
+      <p style="margin-bottom:0">The corpus runs against the shadow adapter, so it is deterministic and finishes in milliseconds. Those per-scenario timings are the harness, not the agent, and are deliberately never quoted as latency anywhere in this project. The wall clock above is measured separately, end to end from the trace: 40 seconds and $0.033 for the run quoted at the top of this page. Across the eleven complete live runs it ranges from 18 to 51 seconds, median 28.</p>
     </div>
 
     <div class="callout">
@@ -514,7 +516,7 @@
       <div class="bug"><span class="bug-n">16</span><div><div class="bug-t">The eval harness corrupted its own fixture</div><div class="bug-d">The scenario that executes twice to prove replay protection overwrote its recorded plan with the second, empty one.</div></div></div>
       <div class="bug"><span class="bug-n">17</span><div><div class="bug-t">&ldquo;Could not check&rdquo; was treated as &ldquo;checked and failed&rdquo;</div><div class="bug-d">A Slack token that could post but not read back made the adapter return an empty message list on API error &mdash; quietly turning &ldquo;I could not look&rdquo; into &ldquo;it is not there&rdquo;. Unverifiable is now a third state, distinct from pass and fail.</div></div></div>
       <div class="bug"><span class="bug-n">18</span><div><div class="bug-t">A failed notification rolled back the whole offboarding</div><div class="bug-d">A Slack post returning 404 would have handed the departing employee their repository access back, in order to fix a reporting problem.</div></div></div>
-      <div class="bug"><span class="bug-n">19</span><div><div class="bug-t">The planner was unreliable two times in five</div><div class="bug-d">It returned a well-written summary with an <em>empty</em> decisions array &mdash; a confident narrative over no plan at all. See below.</div></div></div>
+      <div class="bug"><span class="bug-n">19</span><div><div class="bug-t">The mutation result was erased by the command most likely to be demonstrated</div><div class="bug-d"><span class="mono">npm run eval</span> and <span class="mono">npm run eval:mutation</span> write the same report file, and the former rewrote it without the mutation field &mdash; blanking &ldquo;3/3 mutants killed&rdquo; on the console. A headline claim was silently order-dependent on the command most likely to be run in front of an audience. Prior results are carried forward now.</div></div></div>
     </div>
 
     <div class="callout">
@@ -539,11 +541,11 @@
     <h2>Run it</h2>
     <div class="wire">npm run preflight                              <span class="c"># every row green</span>
 npm run seed:github &amp;&amp; npm run seed:drive      <span class="c"># idempotent fixtures</span>
-npm run offboard -- --mode=live                <span class="c"># the live catch</span>
+npm run offboard -- --mode=live --deny          <span class="c"># the live catch</span>
 npm run eval                                   <span class="c"># 13 scenarios, both arms</span>
 npm run eval:mutation                          <span class="c"># the suite must go red</span>
 npm run dev                                    <span class="c"># the operator console</span></div>
-    <p class="measure" style="font-size:14.5px;color:var(--muted)">The eval replays recorded plans, so the suite is free and instant. <span class="mono">npm run eval -- --live</span> re-plans against the model; the full recording pass costs about $0.44.</p>
+    <p class="measure" style="font-size:14.5px;color:var(--muted)">The eval replays recorded plans, so the suite is free and instant. <span class="mono">npm run eval -- --live</span> re-plans against the model; the full recording pass costs about $0.44. <span class="mono">--deny</span> withholds approval on the irreversible action, which is the interesting outcome and leaves the fixture intact for the next run.</p>
     <a class="repo" href="https://github.com/msehgal001/understudy">github.com/msehgal001/understudy</a>
   </section>
 

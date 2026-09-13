@@ -374,7 +374,7 @@ reported success:
 The last three were found on the day of the deadline, by an adversarial audit and
 by mutation testing, and they are the most instructive ones here.
 
-0. **The eval itself could not fail.** Forcing the headline check
+0a. **The eval itself could not fail.** Forcing the headline check
    `githubNoEffectiveAccess` to return a clean pass changed nothing: all scenarios
    still passed and the silent failure rate stayed at 0.0%. The recorded Sonnet
    plans already closed every inherited path before verify ran, so the check never
@@ -393,6 +393,13 @@ by mutation testing, and they are the most instructive ones here.
    directions — GitHub also rejects `write` on the collaborators endpoint, so
    rolling back a removal would have failed too.
 
+0c. **A dormant team membership was invisible to everything.** Described under
+   [Mutation testing](#mutation-testing-proving-the-eval-can-fail): team membership
+   was discovered only by walking repositories, so a team with no repository grants
+   was never seen, and no goal check covered membership. A departing employee left
+   on that team passed every check and would silently regain access the moment the
+   team was given a repo.
+
 0d. **The audit issue was filed at an address the model invented.** On a live run
    Sonnet filed the Linear audit issue into a team called `payments` — the GitHub
    team slug, which does not exist in Linear. The precondition caught it and the
@@ -401,13 +408,6 @@ by mutation testing, and they are the most instructive ones here.
    `LINEAR_TEAM_ID` or is resolved from the workspace, the same rule already used
    for the Slack channel and the transfer recipient, and `npm run preflight`
    checks it resolves before a run starts.
-
-0c. **A dormant team membership was invisible to everything.** Described under
-   [Mutation testing](#mutation-testing-proving-the-eval-can-fail): team membership
-   was discovered only by walking repositories, so a team with no repository grants
-   was never seen, and no goal check covered membership. A departing employee left
-   on that team passed every check and would silently regain access the moment the
-   team was given a repo.
 
 1. **A skipped action was reported as success.** A precondition correctly refused
    to transfer a file, and the run still finished `verified`. Preconditions that

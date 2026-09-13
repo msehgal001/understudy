@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-13T20:59:21.888Z",
+  "generatedAt": "2026-09-13T21:31:18.826Z",
   "mode": "replay",
   "plannerModel": "naive-baseline",
   "metrics": {
@@ -17,7 +17,7 @@
     "costUsdTotal": 0,
     "costUsdPerRun": 0,
     "latencyP50Ms": 1,
-    "latencyP95Ms": 42
+    "latencyP95Ms": 43
   },
   "scenarios": [
     {
@@ -67,7 +67,7 @@
       "blockedByDesign": 2,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 2,
+      "durationMs": 1,
       "costUsd": 0,
       "oracle": [
         {
@@ -122,7 +122,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 0,
       "rollbackCorrect": true,
-      "durationMs": 0,
+      "durationMs": 1,
       "costUsd": 0,
       "oracle": [
         {
@@ -149,7 +149,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 42,
+      "durationMs": 43,
       "costUsd": 0,
       "oracle": [
         {
@@ -387,7 +387,7 @@
       "blockedByDesign": 0,
       "remediationRounds": 1,
       "rollbackCorrect": null,
-      "durationMs": 1,
+      "durationMs": 0,
       "costUsd": 0,
       "oracle": [
         {
@@ -428,7 +428,7 @@
         "costUsdTotal": 0,
         "costUsdPerRun": 0,
         "latencyP50Ms": 1,
-        "latencyP95Ms": 42
+        "latencyP95Ms": 43
       }
     },
     {
@@ -449,7 +449,7 @@
         "costUsdTotal": 0.43997400000000003,
         "costUsdPerRun": 0.03384415384615385,
         "latencyP50Ms": 1,
-        "latencyP95Ms": 42
+        "latencyP95Ms": 43
       }
     }
   ],

@@ -1,6 +1,37 @@
 # Understudy
 
-**[Read the system and reliability brief →](https://msehgal001.github.io/understudy/)**
+**Multi-App AI Agent Hackathon submission — Madhav Sehgal (team of one)**
+
+| | |
+|---|---|
+| **Two-minute demo** | **https://youtube.com/shorts/mAu2AHefICM** |
+| **System & reliability brief** | https://msehgal001.github.io/understudy/ |
+| **Repository** | https://github.com/msehgal001/understudy |
+
+### External apps
+
+Four, all connected with real credentials and exercised with real writes on every
+live run. `npm run preflight` checks all seventeen credential, scope and fixture
+requirements before a run starts.
+
+| App | What the agent does with it | Auth |
+|---|---|---|
+| **GitHub** | Enumerates and revokes repository access across direct collaborator records, team grants and the organisation default; removes team and organisation membership | Personal access token, `admin:org` + `repo` |
+| **Google Drive** | Enumerates file permissions, transfers ownership of sole-owned files, revokes user access and link sharing | OAuth |
+| **Linear** | Reassigns open issues to the successor, removes team memberships, files the offboarding audit issue | API key |
+| **Slack** | Posts the offboarding report, then reads it back to confirm it landed | Bot token, `chat:write` + history |
+
+### What is in this repository
+
+| Looking for | Where |
+|---|---|
+| Project overview | This section, and the premise below |
+| How reliability was tested | [The reliability architecture](#the-reliability-architecture), [Failure modes the eval covers](#failure-modes-the-eval-covers), and [Mutation testing](#mutation-testing-proving-the-eval-can-fail) |
+| Setup instructions | [Setup](#setup) |
+| How to run it | [Running it](#running-it) |
+| Measured results | [Measured results](#measured-results), and `eval-report.json` in this repo |
+
+---
 
 An offboarding agent that removes a departing employee's access across GitHub,
 Google Drive, Linear and Slack — and then independently proves it actually
